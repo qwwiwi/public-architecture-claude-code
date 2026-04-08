@@ -128,31 +128,59 @@ Install: `pip install openviking --upgrade`
 
 ## Memory Rotation and Cron
 
+Complete data flow with Sonnet-based compression:
+
 ```
-HOT (72h)  → emergency trim at 20KB (auto, on every write)
-           → cron trim entries >72h (daily 05:00 UTC)
-           → /compact command: extract facts → WARM, keep last 48h
+Gateway (every message) -> HOT (recent.md)
+  |
+  +-- Emergency trim (auto, >20KB, bash)
+  |     Keeps last 600 lines, trims from top
+  |
+  +-- trim-hot.sh (cron 05:00 UTC, Sonnet)
+  |     Entries >24h -> Sonnet summary -> WARM
+  |     >40 entries remaining -> oldest also compressed
+  |     Fallback: bash (first 120 chars if Sonnet unavailable)
+  |     Runs from /tmp to avoid loading CLAUDE.md (~35K tokens saved)
+  |     flock for safe concurrent access with gateway
+  |
+  +-- compress-warm.sh (cron 06:00 UTC, Sonnet)
+  |     WARM >10KB -> Sonnet re-compression by topic
+  |     110 raw entries -> 15-20 key facts
+  |     Skip if <10KB or <50 lines or Sonnet unavailable
+  |     Garbage protection: skip if Sonnet returns <3 lines
+  |
+  +-- rotate-warm.sh (cron 04:30 UTC, bash)
+  |     WARM >14d -> COLD (pure bash, no model)
+  |
+  +-- memory-rotate.sh (cron 21:00 UTC, bash)
+  |     COLD >5KB -> archive/YYYY-MM.md (pure bash)
+  |
+  +-- /compact command (manual, Sonnet)
+  |     Extract key facts from last 24h HOT -> WARM, trim HOT to 48h
+  |
+  +-- /reset command (manual, Sonnet)
+        Save important context to COLD, start new session
 
-WARM (14d) → cron rotate >14d entries to COLD (daily 04:00 UTC)
-
-COLD       → grows, Read tool on demand
-           → /reset saves context here before session wipe
-
-L4         → OpenViking, fire-and-forget after every message, forever
+L4     -> OpenViking, fire-and-forget after every message, forever
 ```
 
 ### Recommended crontab
 
 ```crontab
-# Trim HOT: remove entries >72h from recent.md
+# 1. Rotate WARM: move >14d entries to COLD (bash, no model)
+30 4 * * * /path/to/rotate-warm.sh
+
+# 2. Trim HOT: entries >24h -> Sonnet summary -> WARM
 0 5 * * * /path/to/trim-hot.sh
 
-# Rotate WARM: move >14d decisions to MEMORY.md (COLD)
-0 4 * * * /path/to/rotate-warm.sh
+# 3. Compress WARM: Sonnet re-compression by topic (>10KB only)
+0 6 * * * /path/to/compress-warm.sh
 
-# Backup memory files
-0 3 * * * /path/to/backup.sh
+# 4. Archive COLD: MEMORY.md >5KB -> archive/YYYY-MM.md (bash)
+0 21 * * * /path/to/memory-rotate.sh
 ```
+
+Order: rotate-warm (clear old) -> trim-hot (add new to WARM) -> compress-warm (re-compress if needed).
 
 ### Gateway commands for memory
 

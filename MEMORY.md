@@ -143,46 +143,95 @@ Operator sends `/reset` in Telegram:
 - Model: Sonnet (for the save step)
 - After reset, first message injects latest MEMORY.md section as context bridge
 
-### WARM -> COLD rotation (cron, every 14 days)
+### WARM -> COLD rotation (rotate-warm.sh, cron 04:30 UTC)
 
-Entries older than 14 days in `core/warm/decisions.md` should move to `core/MEMORY.md`.
+Entries older than 14 days in `core/warm/decisions.md` move to `core/MEMORY.md`.
 
 ```
-# Example cron (runs daily at 04:00 UTC)
-0 4 * * * /path/to/rotate-warm.sh
+# Cron: daily at 04:30 UTC (runs BEFORE trim-hot adds new entries to WARM)
+30 4 * * * /path/to/rotate-warm.sh
 ```
 
-Script logic:
+Script logic (pure bash, no model):
 1. Parse `## YYYY-MM-DD` headers in `decisions.md`
-2. Sections older than 14 days → append to `MEMORY.md`
+2. Sections older than 14 days -- append to `MEMORY.md`
 3. Remove from `decisions.md`
 
-### HOT trim (cron, daily)
+### HOT -> WARM compression (trim-hot.sh, cron 05:00 UTC)
 
-Entries older than 72h should be removed from `core/hot/recent.md`.
+Entries older than 24h are collected and sent to **Sonnet** for smart summarization, then appended to WARM.
 
 ```
-# Example cron (runs daily at 05:00 UTC)
+# Cron: daily at 05:00 UTC
 0 5 * * * /path/to/trim-hot.sh
 ```
 
-Script logic:
-1. Parse `### YYYY-MM-DD HH:MM` headers
-2. Remove entries older than 72 hours
-3. Rewrite file with remaining entries
+How it works:
+1. If HOT (`recent.md`) is under 10 KB -- skip entirely
+2. Acquire `flock` on HOT file (prevents conflicts with gateway writes)
+3. Collect all entries with timestamps older than 24h
+4. If more than 40 entries remain after removing old ones -- also collect the oldest entries
+5. Send collected entries to **Sonnet** with prompt: extract key facts as `- YYYY-MM-DD HH:MM: fact/decision/result`
+6. Append Sonnet output to `core/warm/decisions.md`
+7. Rewrite `recent.md` with remaining (recent) entries only
+
+Key details:
+- Runs from `/tmp` working directory to avoid loading project CLAUDE.md (saves ~35K tokens per run)
+- **Bash fallback:** if Sonnet is unavailable (rate limit, timeout), falls back to extracting first 120 characters of each entry
+- Uses `flock` for safe concurrent access with gateway process
+
+### WARM compression (compress-warm.sh, cron 06:00 UTC)
+
+After trim-hot.sh adds new entries to WARM daily, WARM can grow large with raw per-entry facts. compress-warm.sh uses **Sonnet** to re-compress WARM by grouping related events into topic-based key facts.
+
+```
+# Cron: daily at 06:00 UTC (runs AFTER trim-hot adds new entries)
+0 6 * * * /path/to/compress-warm.sh
+```
+
+How it works:
+1. If WARM (`decisions.md`) is under 10 KB or under 50 lines -- skip
+2. Send full WARM content to Sonnet: "group related events into topic-based key facts"
+3. If Sonnet returns fewer than 3 lines -- skip (garbage protection)
+4. Replace WARM content with compressed output
+5. Typical result: 110 raw entries -- 15-20 key facts
+
+Safety:
+- **Sonnet unavailable** (rate limit, timeout) -- skip, retry next run
+- **Sonnet returns < 3 lines** -- skip, do not overwrite (garbage protection)
+- Original content is backed up before overwrite
+
+### COLD archival (memory-rotate.sh, cron 21:00 UTC)
+
+When COLD (`MEMORY.md`) exceeds 5 KB, older content is moved to monthly archives.
+
+```
+# Cron: daily at 21:00 UTC
+0 21 * * * /path/to/memory-rotate.sh
+```
+
+Script logic (pure bash, no model):
+1. If `MEMORY.md` is under 5 KB -- skip
+2. Move content to `archive/YYYY-MM.md` (grouped by month)
+3. Keep only recent entries in `MEMORY.md`
 
 ### Recommended cron schedule
 
 ```crontab
-# HOT trim: remove entries >72h (daily 05:00 UTC)
+# 1. Rotate WARM: move >14d entries to COLD (bash, no model)
+30 4 * * * /path/to/rotate-warm.sh
+
+# 2. Trim HOT: entries >24h -> Sonnet summary -> WARM
 0 5 * * * /path/to/trim-hot.sh
 
-# WARM rotate: move >14d decisions to COLD (daily 04:00 UTC)
-0 4 * * * /path/to/rotate-warm.sh
+# 3. Compress WARM: Sonnet re-compression by topic (>10KB only)
+0 6 * * * /path/to/compress-warm.sh
 
-# Backup: snapshot memory files (daily 03:00 UTC)
-0 3 * * * /path/to/backup.sh
+# 4. Archive COLD: MEMORY.md >5KB -> archive/YYYY-MM.md (bash)
+0 21 * * * /path/to/memory-rotate.sh
 ```
+
+Order matters: rotate-warm first (clears old WARM entries), then trim-hot (adds new entries to WARM), then compress-warm (re-compresses if WARM grew too large).
 
 ## OpenViking: Triggers and Data Flow
 
@@ -255,11 +304,12 @@ curl -X POST "http://localhost:1933/api/v1/search/find" \
 | Global CLAUDE.md + rules | ~8 KB | ~2,500 |
 | Project CLAUDE.md | ~8 KB | ~2,500 |
 | @includes (AGENTS, USER, rules, TOOLS) | ~17 KB | ~6,000 |
-| WARM decisions.md | ~1 KB | ~300 |
+| WARM decisions.md | ~3 KB | ~1,000 |
 | HOT recent.md | 10-80 KB | 3,000-25,000 |
-| **TOTAL** | **35-115 KB** | **15,000-35,000** |
+| **TOTAL** | **37-117 KB** | **15,500-35,500** |
 
 Opus 4.6 / Sonnet 4.6 context window: 1,000,000 tokens (~830K usable).
 Startup cost: 2-4% of context window.
 CLAUDE.md recommended size: under 200 lines (beyond that Claude starts ignoring instructions).
 @import max recursion depth: 5 hops.
+Note: Sonnet compression (compress-warm.sh) keeps WARM compact at ~3 KB even with daily additions from trim-hot.sh.

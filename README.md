@@ -15,6 +15,7 @@ Universal architecture for Claude Code agents with local memory layers and seman
 | [SUBAGENTS.md](SUBAGENTS.md) | Custom subagents: agents/*.md format, built-in types, examples |
 | [HOOKS.md](HOOKS.md) | Lifecycle hooks: auto-format, validation, security |
 | [examples/](examples/) | Template files (CLAUDE.md, AGENTS.md, rules, etc.) |
+| [scripts/](scripts/) | Memory management scripts (trim-hot, compress-warm, rotate) |
 | [skills/](skills/) | Recommended skills (Superpowers, etc.) |
 
 ## Quick Start
