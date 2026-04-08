@@ -259,5 +259,7 @@ curl -X POST "http://localhost:1933/api/v1/search/find" \
 | HOT recent.md | 10-80 KB | 3,000-25,000 |
 | **TOTAL** | **35-115 KB** | **15,000-35,000** |
 
-Opus context window: 200,000 tokens.
-Startup cost: 8-18% of context window.
+Opus 4.6 / Sonnet 4.6 context window: 1,000,000 tokens (~830K usable).
+Startup cost: 2-4% of context window.
+CLAUDE.md recommended size: under 200 lines (beyond that Claude starts ignoring instructions).
+@import max recursion depth: 5 hops.

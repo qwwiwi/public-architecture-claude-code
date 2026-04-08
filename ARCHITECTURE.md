@@ -36,6 +36,25 @@ Claude Code launch
 ~15-35K tokens depending on HOT size
 ```
 
+## Session Management
+
+```
+Session lifecycle:
+  1. First message   → new session ID (UUID), saved in state/sid-{agent}-{chat}.txt
+  2. Subsequent msgs → claude --resume <session_id> (preserves context)
+  3. /reset          → save to COLD, delete session file, next msg = new session
+  4. /reset force    → delete session file immediately, no save
+  5. Post-reset      → first message injects latest MEMORY.md section as context bridge
+```
+
+Key commands:
+- `claude --continue` — resume last conversation
+- `claude --resume` — pick from session list
+- `claude -n "name"` — name a session
+- `/rewind` or `Esc+Esc` — restore from checkpoint (conversation, code, or both)
+
+Checkpoints are created on every Claude action and persist across sessions.
+
 ## On-Demand (NOT in context)
 
 ```

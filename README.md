@@ -11,6 +11,9 @@ Universal architecture for Claude Code agents with local memory layers and seman
 | [STRUCTURE.md](STRUCTURE.md) | Directory layout (single or dual agent) |
 | [MEMORY.md](MEMORY.md) | 4-layer memory system with token budget |
 | [CHECKLIST.md](CHECKLIST.md) | Step-by-step: create a new agent from scratch |
+| [SKILLS.md](SKILLS.md) | How to create and configure skills |
+| [SUBAGENTS.md](SUBAGENTS.md) | Custom subagents: agents/*.md format, built-in types, examples |
+| [HOOKS.md](HOOKS.md) | Lifecycle hooks: auto-format, validation, security |
 | [examples/](examples/) | Template files (CLAUDE.md, AGENTS.md, rules, etc.) |
 | [skills/](skills/) | Recommended skills (Superpowers, etc.) |
 
