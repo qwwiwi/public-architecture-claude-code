@@ -52,14 +52,18 @@ Operator (Telegram)
     │ voice / text / photo
     ▼
 Gateway (systemd service)
-    │ 1. Receive message
-    │ 2. Transcribe voice ([Groq](https://groq.com) Whisper)
-    │ 3. Launch Claude Code
-    │ 4. Write to HOT (recent.md)
-    │ 5. Reply in Telegram
+    │ 1. Receive message (polling thread)
+    │ 2. Classify source (own_text / own_voice / forwarded / external_media)
+    │ 3. Download media (photo, video, document — 20MB limit)
+    │ 4. Transcribe voice ([Groq](https://groq.com) Whisper — whisper-large-v3-turbo)
+    │ 5. Launch Claude Code (claude -p --resume <session_id>)
+    │ 6. Stream progress (real-time status in Telegram: plan, tools, subagents)
+    │ 7. Write to HOT (core/hot/recent.md — fcntl lock, 200 char snippets)
+    │ 8. Push to OpenViking (fire-and-forget, 2-thread pool — own_text/voice/forwarded only)
+    │ 9. Reply in Telegram (markdown → HTML, chunked at 4000 chars)
     ▼
 Claude Code (model)
-    │ context loaded
+    │ context loaded via @include
     ▼
 Response to operator
 ```
@@ -84,8 +88,17 @@ localhost:1933
 │   ├── User: claude-code    (own embeddings)
 │   └── User: jarvis         (own embeddings)
 │
-├── Write: after each session
-│   POST /api/v1/memories/save
+├── Write: after EVERY message (gateway auto-push)
+│   POST /api/v1/sessions           → create
+│   POST /api/v1/sessions/{id}/messages  → user + agent msgs (max 3000 chars each)
+│   POST /api/v1/sessions/{id}/extract   → LLM extracts structured memories
+│   DELETE /api/v1/sessions/{id}         → cleanup
+│
+├── What triggers push:
+│   own_text     → yes (extract preferences, decisions)
+│   own_voice    → yes (after Groq transcription)
+│   forwarded    → yes (with anti-pollution guard)
+│   external_media → NO (hot only, avoids preference pollution)
 │
 └── Search: when old context needed (>72h)
     POST /api/v1/search/find
@@ -94,11 +107,39 @@ localhost:1933
 
 Install: `pip install openviking --upgrade`
 
-## Memory Rotation
+## Memory Rotation and Cron
 
 ```
-HOT (72h)  → cron trim entries >72h
-WARM (14d) → rotate old decisions to COLD
+HOT (72h)  → emergency trim at 20KB (auto, on every write)
+           → cron trim entries >72h (daily 05:00 UTC)
+           → /compact command: extract facts → WARM, keep last 48h
+
+WARM (14d) → cron rotate >14d entries to COLD (daily 04:00 UTC)
+
 COLD       → grows, Read tool on demand
-L4         → OpenViking, forever
+           → /reset saves context here before session wipe
+
+L4         → OpenViking, fire-and-forget after every message, forever
 ```
+
+### Recommended crontab
+
+```crontab
+# Trim HOT: remove entries >72h from recent.md
+0 5 * * * /path/to/trim-hot.sh
+
+# Rotate WARM: move >14d decisions to MEMORY.md (COLD)
+0 4 * * * /path/to/rotate-warm.sh
+
+# Backup memory files
+0 3 * * * /path/to/backup.sh
+```
+
+### Gateway commands for memory
+
+| Command | What it does |
+|---------|-------------|
+| `/compact` | Extract key facts from last 24h HOT → WARM, trim HOT to 48h |
+| `/reset` | Save important context to COLD (MEMORY.md), start new session |
+| `/reset force` | Delete session immediately, no save |
+| `/status` | Show session age, memory file sizes (rules, warm, hot, cold) |
