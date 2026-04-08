@@ -2,6 +2,8 @@
 
 Пошаговая инструкция. Копируй промпты, вставляй в Claude Code -- всё установится автоматически.
 
+**Важно:** Этот гайд читают агенты (Claude Code с Superpowers), не люди. Каждый шаг -- точная инструкция для агента. Ничего не пропускать.
+
 ## Что получишь
 
 - Claude Code с настроенной архитектурой памяти (4 слоя)
@@ -128,19 +130,74 @@ gh auth login
 ```
 Изучи архитектуру по ссылке https://github.com/qwwiwi/public-architecture-claude-code и разверни её на этом сервере.
 
-Конкретно:
-1. Прочитай все файлы в репозитории (ARCHITECTURE.md, STRUCTURE.md, MEMORY.md, CHECKLIST.md, все examples/)
-2. Создай структуру директорий по STRUCTURE.md
-3. Создай все identity-файлы по шаблонам из examples/
-4. Настрой глобальный ~/.claude/CLAUDE.md (добавь правила если не хватает)
-5. Создай workspace для основного агента (claude-code)
-6. В CLAUDE.md агента добавь @include для всех core-файлов
-7. Создай пустые файлы памяти (hot/recent.md, warm/decisions.md, MEMORY.md)
+ВАЖНО: Прочитай ВСЕ файлы в репозитории. Ни один файл не пропускай. Список обязательных для чтения:
+- README.md
+- ARCHITECTURE.md -- точки входа, загрузка контекста, gateway flow, session management
+- STRUCTURE.md -- дерево директорий, что изолировано vs shared
+- MEMORY.md -- 4 слоя памяти, flush, compaction, rotation, cron, OpenViking, token budget
+- CHECKLIST.md -- чеклист создания агента
+- SKILLS.md -- как создавать скиллы, формат, frontmatter
+- SUBAGENTS.md -- как создавать субагентов, agents/*.md, built-in типы
+- HOOKS.md -- lifecycle hooks, universal (block dangerous, protect files, command logging) + project-specific
+- examples/global-claude.md -- шаблон глобального CLAUDE.md
+- examples/agent-claude.md -- шаблон CLAUDE.md агента
+- examples/agents.md -- шаблон AGENTS.md
+- examples/rules.md -- шаблон rules.md
+- examples/tools.md -- шаблон TOOLS.md
+- skills/super-power.md -- документация Superpowers
+
+После прочтения ВСЕХ файлов:
+
+1. Создай структуру директорий по STRUCTURE.md:
+   ~/.claude-lab/shared/skills/
+   ~/.claude-lab/shared/gateway/
+   ~/.claude-lab/claude-code/.claude/
+   ~/.claude-lab/claude-code/.claude/core/
+   ~/.claude-lab/claude-code/.claude/core/warm/
+   ~/.claude-lab/claude-code/.claude/core/hot/
+   ~/.claude-lab/claude-code/.claude/tools/
+   ~/.claude-lab/claude-code/.claude/skills/
+   ~/.claude-lab/claude-code/.claude/agents/
+   ~/.claude-lab/claude-code/.claude/scripts/
+   ~/.claude-lab/claude-code/secrets/ (chmod 700)
+
+2. Создай identity-файлы по шаблонам из examples/:
+   - ~/.claude-lab/claude-code/.claude/CLAUDE.md (из examples/agent-claude.md) с @include для всех core-файлов
+   - ~/.claude-lab/claude-code/.claude/core/AGENTS.md (из examples/agents.md)
+   - ~/.claude-lab/claude-code/.claude/core/USER.md (пустой шаблон, заполнится на шаге 7)
+   - ~/.claude-lab/claude-code/.claude/core/rules.md (из examples/rules.md)
+   - ~/.claude-lab/claude-code/.claude/tools/TOOLS.md (из examples/tools.md)
+
+3. Создай пустые файлы памяти:
+   - core/warm/decisions.md (заголовок: "# WARM DECISIONS")
+   - core/hot/recent.md (заголовок: "# Hot memory -- last 72h rolling journal")
+   - core/MEMORY.md (заголовок: "# MEMORY -- Cold Archive")
+   - core/LEARNINGS.md (заголовок: "# LEARNINGS")
+
+4. Настрой universal hooks по HOOKS.md:
+   - Создай .claude/hooks/block-dangerous.sh (block rm -rf, force push, DROP)
+   - Создай .claude/hooks/protect-files.sh (block .env, .key, secrets)
+   - Создай .claude/hooks/log-commands.sh (audit trail)
+   - chmod +x .claude/hooks/*.sh
+   - Добавь hooks в .claude/settings.json (universal settings из HOOKS.md)
+
+5. Создай скрипты ротации памяти:
+   - scripts/trim-hot.sh -- удаляет записи >72h из hot/recent.md
+   - scripts/rotate-warm.sh -- переносит записи >14d из warm/decisions.md в MEMORY.md
+   - chmod +x scripts/*.sh
+
+6. Добавь cron jobs:
+   - 0 5 * * * trim-hot.sh
+   - 0 4 * * * rotate-warm.sh
 
 Имя агента: claude-code
 Workspace: ~/.claude-lab/claude-code/.claude/
 
-После создания покажи дерево файлов и содержимое каждого созданного файла.
+После создания покажи:
+1. Полное дерево файлов (tree)
+2. Содержимое CLAUDE.md агента (с @include)
+3. Содержимое settings.json (hooks)
+4. Список cron jobs
 ```
 
 ---
@@ -219,14 +276,31 @@ Workspace для JARVIS: ~/.claude-lab/jarvis/.claude/
 ## Шаг 10: Проверь
 
 ```
-Проверь что архитектура работает:
+Проверь что архитектура работает. Пройди по каждому пункту:
 
-1. Покажи дерево ~/.claude-lab/
-2. Покажи содержимое CLAUDE.md агента (с @include)
-3. Проверь что hot/recent.md, warm/decisions.md существуют
-4. Проверь что Superpowers установлен: claude plugins list
-5. Проверь что gh авторизован: gh auth status
-6. Отправь тестовое сообщение в Telegram-бот
+1. Покажи дерево ~/.claude-lab/ (tree -L 4)
+2. Покажи содержимое CLAUDE.md агента -- проверь что все @include на месте:
+   @core/AGENTS.md
+   @core/USER.md
+   @core/rules.md
+   @tools/TOOLS.md
+   @core/warm/decisions.md
+   @core/hot/recent.md
+3. Проверь что файлы памяти существуют и не пустые:
+   core/hot/recent.md
+   core/warm/decisions.md
+   core/MEMORY.md
+   core/LEARNINGS.md
+4. Проверь hooks:
+   ls -la .claude/hooks/
+   cat .claude/settings.json
+5. Проверь cron:
+   crontab -l | grep -E "trim|rotate"
+6. Проверь Superpowers: claude plugins list
+7. Проверь gh: gh auth status
+8. (Если Telegram) Отправь тестовое сообщение боту
+
+Для каждого пункта покажи результат. Если что-то не настроено -- исправь.
 ```
 
 ---
@@ -264,6 +338,11 @@ Workspace для JARVIS: ~/.claude-lab/jarvis/.claude/
 ~/.claude/
 ├── CLAUDE.md                    глобальные правила
 ├── rules/*.md                   конвенции языков
+├── settings.json                universal hooks
+├── hooks/
+│   ├── block-dangerous.sh       блокирует rm -rf, force push
+│   ├── protect-files.sh         блокирует .env, .key, secrets
+│   └── log-commands.sh          audit trail
 └── plugins/superpowers          TDD, дебаг, ревью
 
 ~/.claude-lab/
@@ -279,18 +358,92 @@ Workspace для JARVIS: ~/.claude-lab/jarvis/.claude/
 │   │   ├── rules.md             границы
 │   │   ├── warm/decisions.md    решения 14 дней
 │   │   ├── hot/recent.md        журнал 72 часа
-│   │   └── MEMORY.md            архив
+│   │   ├── MEMORY.md            архив (холодная память)
+│   │   └── LEARNINGS.md         уроки из ошибок
 │   ├── tools/TOOLS.md           серверы
-│   └── skills/                  скиллы агента
+│   ├── skills/                  скиллы агента
+│   ├── agents/                  конфиги субагентов
+│   ├── scripts/
+│   │   ├── trim-hot.sh          cron: удаляет >72h из hot
+│   │   └── rotate-warm.sh       cron: переносит >14d в COLD
+│   └── secrets/                 ключи (chmod 700)
 │
 └── jarvis/.claude/              автономный агент (если шаг 9)
     └── (та же структура)
 ```
 
+## Advanced: Memory Flush (OpenClaw approach)
+
+Продвинутый подход к управлению памятью, вдохновлённый [OpenClaw](https://github.com/openclaw/openclaw).
+
+### Проблема
+
+HOT memory (`recent.md`) растёт бесконтрольно. За активный день может достичь 80+ KB, потребляя 70% стартового контекста. Cron-based trim -- грубый инструмент, удаляющий по времени, а не по ценности.
+
+### Решение: Event-driven flush
+
+Вместо cron-based ротации -- **автоматический flush перед компакцией:**
+
+```
+Сессия Claude Code приближается к лимиту контекста
+    │
+    ▼
+АВТОМАТИЧЕСКИЙ silent turn (перед /compact или auto-compact):
+    │
+    ├── Прочитать core/hot/recent.md
+    ├── Извлечь ключевые факты (решения, preferences, pending actions)
+    ├── APPEND в memory/YYYY-MM-DD.md (daily файл, НЕ перезаписывать)
+    ├── MEMORY.md, LEARNINGS.md -- read-only (не трогать)
+    │
+    ▼
+Обычная компакция (суммаризация старых сообщений)
+```
+
+### Ключевые safety-правила для flush
+
+- **APPEND-only** -- daily файлы только дополняются, не перезаписываются
+- **Bootstrap файлы read-only** -- MEMORY.md, LEARNINGS.md, CLAUDE.md не трогать при flush
+- **Дедупликация** -- маркеры в записях предотвращают дубли при повторном flush
+- **Если нечего сохранять** -- пропустить (не создавать пустых записей)
+
+### Dreaming: продвинутая консолидация памяти
+
+OpenClaw реализует 3-фазную систему «сна» для автоматической promotion записей из short-term в long-term:
+
+| Фаза | Частота | Что делает | Пишет в MEMORY.md? |
+|------|---------|------------|-------------------|
+| **Light Sleep** | Каждые 6ч | Инджест daily файлов, дедупликация | Нет |
+| **Deep Sleep** | 1 раз/сутки | Ранжирует кандидатов по 6 сигналам, promotion | **Да** |
+| **REM Sleep** | 1 раз/неделю | Паттерны, рефлексия, усиление сигналов | Нет |
+
+**6 сигналов для scoring:**
+```
+frequency:     0.24  -- сколько раз вызывалось из памяти
+relevance:     0.30  -- средний score при поиске
+diversity:     0.15  -- из скольких разных контекстов
+recency:       0.15  -- полураспад 14 дней
+consolidation: 0.10  -- повторяемость по разным дням
+conceptual:    0.06  -- плотность тематических тегов
+```
+
+**Порог для promotion в MEMORY.md:** minScore 0.8, минимум 3 recall, минимум 3 уникальных контекста, не старше 30 дней.
+
+### Сравнение подходов
+
+| Аспект | Базовая архитектура (наша) | OpenClaw |
+|--------|---------------------------|----------|
+| Flush | Cron-based (по времени) | Event-driven (перед компакцией) |
+| Promotion | Ручная ротация | Weighted scoring, 6 сигналов |
+| Recall tracking | Нет | Каждый search = signal |
+| Dreaming | Нет | 3 фазы (light/deep/REM) |
+| Сложность | Низкая (bash скрипты) | Высокая (TypeScript + SQLite) |
+
+Базовая архитектура достаточна для начала. Dreaming -- для продвинутых пользователей с высокой нагрузкой.
+
 ## FAQ
 
 **Q: Сколько токенов занимает архитектура?**
-A: ~15,000-35,000 из 200,000 (8-18% окна Opus). Основной потребитель -- hot/recent.md.
+A: ~15,000-35,000 из 1,000,000 (2-4% окна Opus 4.6). Основной потребитель -- hot/recent.md. Используй `/compact` если HOT вырос.
 
 **Q: Можно без Opus?**
 A: Можно на Sonnet, но Opus лучше справляется с длинным контекстом и @includes.
@@ -300,3 +453,9 @@ A: Первый (claude-code-telegram) -- интерактивный, работ
 
 **Q: Обязательно ли OpenViking?**
 A: Нет. Без него работают 3 из 4 слоёв памяти. [OpenViking](https://github.com/volcengine/OpenViking) добавляет семантический поиск по старым диалогам. Установка: `pip install openviking --upgrade`.
+
+**Q: Мой агент правильно всё установил?**
+A: Пройди шаг 10 -- там полный чеклист проверки. Агент проверит каждый файл, hook, cron, и исправит если что-то пропустил.
+
+**Q: CLAUDE.md больше 200 строк -- это нормально?**
+A: Нет. Anthropic рекомендует до 200 строк. Больше -- Claude начинает игнорировать инструкции. Выноси reference-материалы в скиллы (SKILLS.md -- как).
