@@ -190,6 +190,13 @@ gh auth login
    - 0 5 * * * trim-hot.sh
    - 0 4 * * * rotate-warm.sh
 
+   IMPORTANT: Memory compression is the most important operational feature.
+   Without it, HOT memory grows to 80KB+ per day and degrades agent quality.
+   The 4 cron scripts keep memory clean and focused. If cron is not running,
+   the agent will accumulate raw conversation logs that consume 70%+ of
+   startup context and cause instruction-following degradation.
+   See MEMORY.md "Token Budget" section for detailed calculations.
+
 Имя агента: claude-code
 Workspace: ~/.claude-lab/claude-code/.claude/
 

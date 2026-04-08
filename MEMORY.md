@@ -299,17 +299,74 @@ curl -X POST "http://localhost:1933/api/v1/search/find" \
 
 ## Token Budget
 
-| Component | Typical Size | Tokens (est.) |
-|-----------|-------------|---------------|
-| Global CLAUDE.md + rules | ~8 KB | ~2,500 |
-| Project CLAUDE.md | ~8 KB | ~2,500 |
-| @includes (AGENTS, USER, rules, TOOLS) | ~17 KB | ~6,000 |
-| WARM decisions.md | ~3 KB | ~1,000 |
-| HOT recent.md | 10-80 KB | 3,000-25,000 |
-| **TOTAL** | **37-117 KB** | **15,500-35,500** |
+### Token counting rules
 
-Opus 4.6 / Sonnet 4.6 context window: 1,000,000 tokens (~830K usable).
-Startup cost: 2-4% of context window.
-CLAUDE.md recommended size: under 200 lines (beyond that Claude starts ignoring instructions).
-@import max recursion depth: 5 hops.
-Note: Sonnet compression (compress-warm.sh) keeps WARM compact at ~3 KB even with daily additions from trim-hot.sh.
+BPE tokenizers split Cyrillic characters into more tokens than Latin. If your agent operates in a non-Latin language, token counts will be significantly higher than byte counts suggest.
+
+| Content type | Tokens per byte | Why |
+|-------------|----------------|-----|
+| Russian text (Cyrillic) | ~0.45 | Each Cyrillic char = 2 bytes UTF-8, often 1 token per char |
+| English text (Latin) | ~0.25-0.30 | ASCII chars pack efficiently into BPE tokens |
+| Mixed markdown/code | ~0.25 | Code keywords and markdown syntax tokenize well |
+
+This means a 10 KB file in Russian consumes ~4,500 tokens, while the same 10 KB in English consumes ~2,500-3,000 tokens. Plan accordingly.
+
+### Per-file budget (detailed)
+
+| Component | Typical Size | Tokens (Russian) | Tokens (English) |
+|-----------|-------------|-------------------|-------------------|
+| Global CLAUDE.md | ~8 KB | ~3,600 | ~2,400 |
+| Project CLAUDE.md | ~8 KB | ~3,600 | ~2,400 |
+| AGENTS.md | ~6 KB | ~2,700 | ~1,800 |
+| USER.md | ~2 KB | ~900 | ~600 |
+| rules.md | ~5 KB | ~2,250 | ~1,500 |
+| TOOLS.md | ~6 KB | ~2,700 | ~1,800 |
+| Language rules (rules/*.md) | ~3 KB | ~1,350 | ~900 |
+| **IDENTITY subtotal** | **~38 KB** | **~17,100** | **~11,400** |
+| WARM decisions.md | 3-15 KB | 1,350-6,750 | 900-4,500 |
+| HOT recent.md | 5-80 KB | 2,250-36,000 | 1,500-24,000 |
+
+IDENTITY is fixed cost -- it loads every session regardless. WARM and HOT are variable and controlled by the compression cron jobs.
+
+### Three load scenarios
+
+**Scenario 1: After all cron jobs (optimal)**
+
+All 4 cron scripts ran successfully. HOT trimmed to ~20 KB, WARM compressed to ~3 KB.
+
+```
+IDENTITY: 17,100 + WARM: 1,350 + HOT: 9,000 = 27,450 tokens (2.7% of 1M)
+```
+
+This is the target operating state. The agent starts each session with clean, focused context.
+
+**Scenario 2: End of day, before cron (loaded)**
+
+Active day with 150+ messages. HOT grew to ~80 KB, WARM accumulated entries from trim-hot.
+
+```
+IDENTITY: 17,100 + WARM: 6,750 + HOT: 36,000 = 59,850 tokens (6.0% of 1M)
+```
+
+Still within acceptable range but agent quality starts degrading. The operator should run `/compact` manually or wait for cron.
+
+**Scenario 3: Cron broken, gateway writing for a week (worst case)**
+
+Cron jobs failed silently. No compression for 7 days. HOT has accumulated ~200 KB of raw logs.
+
+```
+IDENTITY: 17,100 + WARM: 6,750 + HOT: 90,000 = 113,850 tokens (11.4% of 1M)
+```
+
+Agent noticeably ignores instructions buried in IDENTITY. Emergency trim (>20 KB) will eventually cap HOT at ~600 lines, but quality is already degraded.
+
+### Key insight
+
+Even at maximum load, the architecture uses only 6-11% of the Opus context window. The 1M token limit is never the bottleneck. The compression system exists not to save money but to keep context CLEAN -- an agent with 80 KB of raw conversation logs performs worse than one with 20 KB of structured facts, because attention is finite even when context is not.
+
+### Reference limits
+
+- Opus 4.6 / Sonnet 4.6 context window: 1,000,000 tokens (~830K usable after system prompt)
+- CLAUDE.md recommended size: under 200 lines (beyond that Claude starts ignoring instructions)
+- @import max recursion depth: 5 hops
+- Sonnet compression (compress-warm.sh) keeps WARM compact at ~3 KB even with daily additions from trim-hot.sh
