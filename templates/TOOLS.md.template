@@ -39,6 +39,15 @@
 - Account: {{OPENVIKING_ACCOUNT}}
 - Key: ~/.claude-lab/shared/secrets/openviking.key
 
+## Kanban (vibe-kanban)
+
+- Launch: `npx vibe-kanban` (opens browser UI)
+- MCP: configured in settings.json (auto-available to agent)
+- Storage: SQLite (local, no cloud)
+- Tasks: each task gets its own git worktree + branch
+- Statuses: Todo -> InProgress -> InReview -> Done / Cancelled
+- Multi-agent: all agents on same board see the same tasks
+
 ## GitHub
 
 - Account: {{GITHUB_USERNAME}}

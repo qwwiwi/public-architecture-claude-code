@@ -4,6 +4,7 @@
       "Bash(git *)",
       "Bash(gh *)",
       "Bash(npm *)",
+      "Bash(npx *)",
       "Bash(python3 *)",
       "Read",
       "Glob",
@@ -14,6 +15,12 @@
       "Bash(curl * | bash)",
       "Bash(sudo *)"
     ]
+  },
+  "mcpServers": {
+    "vibe-kanban": {
+      "command": "npx",
+      "args": ["-y", "vibe-kanban", "mcp"]
+    }
   },
   "hooks": {
     "PreToolUse": [
