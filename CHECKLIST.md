@@ -15,11 +15,11 @@ mkdir -p ~/.claude-lab/${AGENT_NAME}/.claude/scripts
 # Symlink shared skills
 ln -s ~/.claude-lab/shared/skills ~/.claude-lab/${AGENT_NAME}/.claude/skills
 
-# Create empty memory files
-touch ~/.claude-lab/${AGENT_NAME}/.claude/core/warm/decisions.md
-touch ~/.claude-lab/${AGENT_NAME}/.claude/core/hot/recent.md
-touch ~/.claude-lab/${AGENT_NAME}/.claude/core/MEMORY.md
-touch ~/.claude-lab/${AGENT_NAME}/.claude/core/LEARNINGS.md
+# Initialize memory files with headers
+echo "# WARM DECISIONS" > ~/.claude-lab/${AGENT_NAME}/.claude/core/warm/decisions.md
+echo "# Hot memory -- last 72h rolling journal" > ~/.claude-lab/${AGENT_NAME}/.claude/core/hot/recent.md
+echo "# MEMORY -- Cold Archive" > ~/.claude-lab/${AGENT_NAME}/.claude/core/MEMORY.md
+echo "# LEARNINGS" > ~/.claude-lab/${AGENT_NAME}/.claude/core/LEARNINGS.md
 ```
 
 ## 2. Write Identity Files

@@ -4,7 +4,7 @@ How to reduce token usage by 60-70% from day one. Essential for cost control and
 
 ## Quick Setup: settings.json
 
-Add to `~/.claude/settings.json`:
+Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (project-only):
 
 ```json
 {
