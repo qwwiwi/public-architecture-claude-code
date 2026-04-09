@@ -28,10 +28,12 @@ Universal architecture for Claude Code agents with local memory layers and seman
 
 | File | Description |
 |------|-------------|
+| [MAPPING.md](MAPPING.md) | Маппинг: OpenClaw vs Claude Code vs наша архитектура |
 | [SKILLS.md](SKILLS.md) | How to create and configure skills |
 | [SUBAGENTS.md](SUBAGENTS.md) | Custom subagents: agents/*.md format, built-in types |
 | [HOOKS.md](HOOKS.md) | Lifecycle hooks: auto-format, validation, security |
-| [examples/](examples/) | Template files (CLAUDE.md, AGENTS.md, rules, etc.) |
+| [templates/](templates/) | Universal templates with {{placeholders}} for install.sh |
+| [examples/](examples/) | Filled example files (CLAUDE.md, AGENTS.md, rules, etc.) |
 | [scripts/](scripts/) | Memory management scripts (trim-hot, compress-warm, rotate) |
 | [skills/](skills/) | Recommended skills (Superpowers, etc.) |
 
@@ -47,11 +49,12 @@ Universal architecture for Claude Code agents with local memory layers and seman
 ### Experienced (full architecture)
 
 1. Clone this repo
-2. Follow [CHECKLIST.md](CHECKLIST.md) to create agent workspace
-3. Customize identity files from [examples/](examples/)
-4. Set up [Telegram Gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) for multi-agent
-5. Deploy [OpenViking](https://github.com/volcengine/OpenViking) for semantic memory
-6. See [MULTI-AGENT.md](MULTI-AGENT.md) for 3-agent architecture
+2. Copy templates from [templates/](templates/) and fill {{placeholders}}
+3. Or follow [CHECKLIST.md](CHECKLIST.md) manually
+4. See [MAPPING.md](MAPPING.md) for design decisions (OpenClaw vs Claude Code vs ours)
+5. Set up [Telegram Gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) for multi-agent
+6. Deploy [OpenViking](https://github.com/volcengine/OpenViking) for semantic memory
+7. See [MULTI-AGENT.md](MULTI-AGENT.md) for 3-agent architecture
 
 ## Two Ways to Connect Telegram
 

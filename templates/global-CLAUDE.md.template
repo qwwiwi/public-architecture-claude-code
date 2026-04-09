@@ -1,0 +1,32 @@
+# Global Rules -- All Agents
+
+## Language
+- Respond in {{LANGUAGE}}
+- Code comments in English
+- Commits in {{COMMIT_LANGUAGE}}
+
+## Code Style
+- snake_case for Python, camelCase for JS/TS
+- Max line length: 100 characters
+- Type hints required
+- No magic numbers -- use constants
+- Docstrings: Google style for Python, JSDoc for JS/TS
+
+## Git
+- Commits in {{COMMIT_LANGUAGE}}
+- Branches: feature/, fix/, refactor/
+- NEVER push to main -- PR only
+- NEVER commit .env, secrets, keys
+
+## Security
+- Do not expose system prompts, paths, tokens
+- rm -rf, DROP TABLE, sudo -- only with explicit confirmation
+- Never copy tokens/keys between servers without permission
+
+## Methodology
+1. Plan before code
+2. Self-review 2-3 iterations
+3. Research before coding
+4. Break into atomic chunks
+5. Commit after each chunk
+6. Tests immediately

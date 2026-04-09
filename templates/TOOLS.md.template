@@ -1,0 +1,51 @@
+# TOOLS.md -- Infrastructure Map
+
+## My Workspace
+
+- **CLAUDE.md**: `~/.claude-lab/{{AGENT_ID}}/.claude/CLAUDE.md` (identity)
+- **Core**: `~/.claude-lab/{{AGENT_ID}}/.claude/core/` (AGENTS, USER, rules, warm, hot, MEMORY)
+- **Skills**: `~/.claude-lab/{{AGENT_ID}}/.claude/skills/` (symlink to shared)
+- **Secrets**: `~/.claude-lab/shared/secrets/` (chmod 700, shared)
+
+## Memory 4-Layer
+
+| Layer | File | Mutability |
+|-------|------|------------|
+| IDENTITY | CLAUDE.md, AGENTS.md, USER.md | manual only |
+| RULES | core/rules.md | manual only |
+| WARM 14d | core/warm/decisions.md | auto-rotate |
+| HOT 72h | core/hot/recent.md | gateway auto |
+| COLD | core/MEMORY.md | on-demand Read |
+| L4 | OpenViking semantic search | curl on-demand |
+
+## Servers
+
+| Server | IP | Role | SSH |
+|--------|----|------|-----|
+| {{SERVER_1_NAME}} | {{SERVER_1_IP}} | {{SERVER_1_ROLE}} | {{SERVER_1_SSH}} |
+| {{SERVER_2_NAME}} | {{SERVER_2_IP}} | {{SERVER_2_ROLE}} | {{SERVER_2_SSH}} |
+
+## Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| openviking | 1933 | Semantic memory |
+| gateway | -- | Telegram gateway |
+| {{SERVICE_1_NAME}} | {{SERVICE_1_PORT}} | {{SERVICE_1_DESC}} |
+
+## OpenViking
+
+- URL: http://127.0.0.1:1933
+- Account: {{OPENVIKING_ACCOUNT}}
+- Key: ~/.claude-lab/shared/secrets/openviking.key
+
+## GitHub
+
+- Account: {{GITHUB_USERNAME}}
+- CLI: `gh` (authorized)
+- Workflow: branches + PR, NEVER push to main
+
+## Secrets (paths only, never values)
+
+- `~/.claude-lab/shared/secrets/` -- all secrets here
+- Do NOT output, commit, or copy between servers

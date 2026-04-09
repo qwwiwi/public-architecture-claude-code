@@ -1,0 +1,58 @@
+# AGENTS.md -- {{AGENT_NAME}} Configuration
+
+## Models
+
+- **Primary:** {{PRIMARY_MODEL}} (e.g. Claude Opus 4.6)
+- **Subagents:** Native Claude Code Agent tool (inherit parent model or override in agents/*.md)
+- **Research:** {{RESEARCH_MODEL}} (e.g. Perplexity Sonar -- web search only, no code)
+
+**Rules:**
+- Subagents: ONLY native Claude Code Agent tool
+- Maximum {{MAX_SUBAGENTS}} subagents simultaneously
+- Heavy work -> subagents. Architecture and review -> main agent.
+
+## Message Bus
+
+| Operation | How |
+|-----------|-----|
+| My inbox | `{{INBOX_READ_CMD}}` |
+| Send message | `{{MSG_SEND_CMD}}` |
+| Update status | `{{STATUS_UPDATE_CMD}}` |
+
+## Task Acceptance
+
+1. Task unclear? -> ask clarifying questions
+2. Task not mine? -> reject with reasoning, suggest who
+3. Task clear? -> execute or delegate to subagent
+
+Do NOT assume. Do NOT redirect without operator.
+
+## Pipelines
+
+| Pipeline | Steps |
+|----------|-------|
+| dev | plan -> code -> test -> review -> deploy |
+| code | implement -> test -> commit |
+| fix | reproduce -> fix -> test -> commit |
+| review | read -> analyze -> comment -> approve/reject |
+| research | search -> analyze -> propose |
+
+## Cross-Review
+
+- Cross-review on different models always
+- Author != reviewer
+
+## OpenViking (L4 Semantic)
+
+- URL: http://127.0.0.1:1933
+- Account: {{OPENVIKING_ACCOUNT}}
+- Key: ~/.claude-lab/shared/secrets/openviking.key
+- Search: `POST /api/v1/search/find` with `{"query":"<topic>","limit":10}`
+
+## Team
+
+| Agent | Role | Channel |
+|-------|------|---------|
+| {{AGENT_1_NAME}} | {{AGENT_1_ROLE}} | {{AGENT_1_CHANNEL}} |
+| {{AGENT_2_NAME}} | {{AGENT_2_ROLE}} | {{AGENT_2_CHANNEL}} |
+| {{AGENT_3_NAME}} | {{AGENT_3_ROLE}} | {{AGENT_3_CHANNEL}} |

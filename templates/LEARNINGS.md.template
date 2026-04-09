@@ -1,0 +1,4 @@
+# LEARNINGS -- {{AGENT_NAME}}
+
+_Lessons from mistakes. NOT loaded into session context. Access via Read tool._
+_Format: context, what went wrong, correct approach, rule._

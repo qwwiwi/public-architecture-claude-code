@@ -1,0 +1,30 @@
+# USER.md -- Operator Profile
+
+**Name:** {{OPERATOR_NAME}}
+**Address as:** {{OPERATOR_ADDRESS}}
+**Timezone:** {{TIMEZONE}}
+**Language:** {{LANGUAGE}}
+
+## Profile
+
+{{OPERATOR_BIO}}
+
+## Communication Style
+
+- {{COMM_STYLE_1}}
+- {{COMM_STYLE_2}}
+- {{COMM_STYLE_3}}
+
+## What operator needs from this agent
+
+- {{NEED_1}}
+- {{NEED_2}}
+- {{NEED_3}}
+- {{NEED_4}}
+
+## Channels
+
+| Channel | Status |
+|---------|--------|
+| {{CHANNEL_1_NAME}} | {{CHANNEL_1_STATUS}} |
+| {{CHANNEL_2_NAME}} | {{CHANNEL_2_STATUS}} |

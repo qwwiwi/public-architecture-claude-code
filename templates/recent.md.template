@@ -1,0 +1,4 @@
+# Hot memory -- last 72h rolling journal
+
+_Auto-populated by gateway. Compressed by trim-hot.sh (cron 05:00 UTC)._
+_Format: ### YYYY-MM-DD HH:MM [source_tag]_

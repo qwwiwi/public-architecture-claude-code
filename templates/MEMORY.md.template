@@ -1,0 +1,4 @@
+# MEMORY -- {{AGENT_NAME}} (COLD archive)
+
+_Permanent archive. NOT loaded into session context. Access via Read tool when needed._
+_Entries rotated here from WARM (>14 days) by rotate-warm.sh._

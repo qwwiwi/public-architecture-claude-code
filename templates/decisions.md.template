@@ -1,0 +1,10 @@
+# WARM DECISIONS -- {{AGENT_NAME}}
+
+_Recent architectural/operational decisions. Last 14 days. Rotation: old entries -> MEMORY.md._
+
+## {{INSTALL_DATE}}
+
+- Initial setup via install.sh
+- Workspace: `~/.claude-lab/{{AGENT_ID}}/.claude/`
+- Model: {{PRIMARY_MODEL}}
+- Skills: shared via symlink to `~/.claude-lab/shared/skills/`
