@@ -4,17 +4,32 @@ Universal architecture for Claude Code agents with local memory layers and seman
 
 ## What's Inside
 
+### Start Here (beginners)
+
 | File | Description |
 |------|-------------|
 | **[SETUP-GUIDE.md](SETUP-GUIDE.md)** | **End-to-end: от нуля до работающего агента (готовые промпты)** |
+| **[FIRST-AGENT.md](FIRST-AGENT.md)** | **Твой первый агент: пошагово от workspace до Telegram** |
+| **[COMMANDS-QUICKREF.md](COMMANDS-QUICKREF.md)** | **Шпаргалка команд: /plan, /tdd, /code-review, decision tree** |
+| **[TOKEN-OPTIMIZATION.md](TOKEN-OPTIMIZATION.md)** | **Оптимизация токенов: экономия 60-70% с первого дня** |
+
+### Architecture (deep dive)
+
+| File | Description |
+|------|-------------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Full architecture diagram and flows |
-| **[MULTI-AGENT.md](MULTI-AGENT.md)** | **Мульти-агентная система: 3 агента, 3 Telegram-бота, 1 gateway, OpenViking** |
-| **[FILES-REFERENCE.md](FILES-REFERENCE.md)** | **Полная карта каждого файла: роль, кто пишет, когда грузится, доступ** |
+| [MULTI-AGENT.md](MULTI-AGENT.md) | Мульти-агентная система: 3 агента, 3 Telegram-бота, 1 gateway |
+| [FILES-REFERENCE.md](FILES-REFERENCE.md) | Полная карта каждого файла: роль, кто пишет, когда грузится |
 | [STRUCTURE.md](STRUCTURE.md) | Directory layout (single or multi-agent) |
 | [MEMORY.md](MEMORY.md) | 4-layer memory system with token budget |
 | [CHECKLIST.md](CHECKLIST.md) | Step-by-step: create a new agent from scratch |
+
+### Reference
+
+| File | Description |
+|------|-------------|
 | [SKILLS.md](SKILLS.md) | How to create and configure skills |
-| [SUBAGENTS.md](SUBAGENTS.md) | Custom subagents: agents/*.md format, built-in types, examples |
+| [SUBAGENTS.md](SUBAGENTS.md) | Custom subagents: agents/*.md format, built-in types |
 | [HOOKS.md](HOOKS.md) | Lifecycle hooks: auto-format, validation, security |
 | [examples/](examples/) | Template files (CLAUDE.md, AGENTS.md, rules, etc.) |
 | [scripts/](scripts/) | Memory management scripts (trim-hot, compress-warm, rotate) |
@@ -22,12 +37,21 @@ Universal architecture for Claude Code agents with local memory layers and seman
 
 ## Quick Start
 
+### Beginners (first agent)
+
+1. Follow [SETUP-GUIDE.md](SETUP-GUIDE.md) -- 10 steps from zero to working agent
+2. Create your first agent with [FIRST-AGENT.md](FIRST-AGENT.md)
+3. Learn commands from [COMMANDS-QUICKREF.md](COMMANDS-QUICKREF.md)
+4. Optimize tokens with [TOKEN-OPTIMIZATION.md](TOKEN-OPTIMIZATION.md)
+
+### Experienced (full architecture)
+
 1. Clone this repo
-2. Follow [CHECKLIST.md](CHECKLIST.md) to create your agent workspace
+2. Follow [CHECKLIST.md](CHECKLIST.md) to create agent workspace
 3. Customize identity files from [examples/](examples/)
-4. (Optional) Set up Telegram gateway: [jarvis-telegram-gateway](https://github.com/qwwiwi/jarvis-telegram-gateway)
-5. (Optional) Install [claude-code-telegram](https://github.com/RichardAtCT/claude-code-telegram) plugin for interactive Telegram access
-6. (Optional) Deploy [OpenViking](https://github.com/volcengine/OpenViking) for semantic memory
+4. Set up [Telegram Gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) for multi-agent
+5. Deploy [OpenViking](https://github.com/volcengine/OpenViking) for semantic memory
+6. See [MULTI-AGENT.md](MULTI-AGENT.md) for 3-agent architecture
 
 ## Two Ways to Connect Telegram
 
