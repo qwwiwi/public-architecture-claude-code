@@ -1,31 +1,36 @@
-# Super Power Skill
+---
+name: superpowers
+description: "Agentic skills framework: TDD, debugging, planning, code-review, git-worktrees, parallel agents. 14 built-in skills that auto-activate by development context."
+user-invocable: false
+---
 
-## What
+# Superpowers
 
 [Superpowers](https://github.com/obra/superpowers) -- agentic skills framework for Claude Code.
 14 built-in skills that auto-activate by development context.
 
 ## Install
 
-```
-/plugin install superpowers@claude-plugins-official
+```bash
+claude plugins marketplace add obra/superpowers-marketplace
+claude plugins install superpowers@superpowers-marketplace
 ```
 
 ## Skills Included
 
 ### Testing & Quality
 - **test-driven-development** -- RED-GREEN-REFACTOR cycle
-- **verification-before-completion** -- verify fix actually works
+- **verification-before-completion** -- verify fix actually works before claiming done
 - **systematic-debugging** -- 4-phase root cause analysis
 
 ### Planning
-- **brainstorming** -- refine ideas through questioning
-- **writing-plans** -- detailed implementation plans
-- **executing-plans** -- batch execution with checkpoints
+- **brainstorming** -- refine ideas through questioning before implementation
+- **writing-plans** -- detailed implementation plans with checkpoints
+- **executing-plans** -- batch execution with review gates
 
 ### Collaboration
 - **requesting-code-review** -- pre-review checklist
-- **receiving-code-review** -- implement review feedback
+- **receiving-code-review** -- implement review feedback with rigor
 - **dispatching-parallel-agents** -- concurrent subagent workflows
 - **subagent-driven-development** -- two-stage review process
 

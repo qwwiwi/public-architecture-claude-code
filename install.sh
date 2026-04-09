@@ -258,7 +258,34 @@ for script in trim-hot.sh compress-warm.sh rotate-warm.sh memory-rotate.sh; do
 done
 
 # ============================================================
-# Step 7: Create symlinks
+# Step 7: Install shared skills (10 base skills)
+# ============================================================
+
+SKILLS_SRC="${SCRIPT_DIR}/skills"
+SKILLS_DST="${SHARED}/skills"
+
+log "Installing base skills..."
+
+SKILL_LIST="groq-voice superpowers markdown-new excalidraw git-workflows skill-creator gws youtube-transcript twitter quick-reminders"
+
+for skill in $SKILL_LIST; do
+    if [ -d "${SKILLS_SRC}/${skill}" ]; then
+        if [ ! -d "${SKILLS_DST}/${skill}" ]; then
+            cp -r "${SKILLS_SRC}/${skill}" "${SKILLS_DST}/${skill}"
+            # Make scripts executable
+            find "${SKILLS_DST}/${skill}" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+            find "${SKILLS_DST}/${skill}" -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
+            log "Installed skill: ${skill}"
+        else
+            warn "Skipping (exists): skill ${skill}"
+        fi
+    else
+        warn "Skill not found in repo: ${skill}"
+    fi
+done
+
+# ============================================================
+# Step 8: Create symlinks
 # ============================================================
 
 log "Creating symlinks..."
@@ -271,7 +298,7 @@ else
 fi
 
 # ============================================================
-# Step 8: Language rules
+# Step 9: Language rules
 # ============================================================
 
 log "Setting up language rules..."
@@ -318,13 +345,13 @@ RULE
 done
 
 # ============================================================
-# Step 9: Set permissions on secrets
+# Step 10: Set permissions on secrets
 # ============================================================
 
 chmod 700 "${SHARED}/secrets" 2>/dev/null || true
 
 # ============================================================
-# Step 10: Summary
+# Step 11: Summary
 # ============================================================
 
 echo ""
@@ -359,8 +386,11 @@ echo "       - ${WORKSPACE}/core/AGENTS.md (models, team)"
 echo "       - ${WORKSPACE}/core/USER.md (your profile)"
 echo "       - ${WORKSPACE}/tools/TOOLS.md (servers, services)"
 echo ""
-echo "    2. Add secrets:"
-echo "       echo 'your-key' > ${SHARED}/secrets/openviking.key"
+echo "    2. Add API keys for skills:"
+echo "       echo 'your-key' > ${SHARED}/secrets/groq-api-key          # groq-voice (free)"
+echo "       echo 'your-key' > ${SHARED}/secrets/transcript-api-key    # youtube (free 100)"
+echo "       echo 'your-key' > ${SHARED}/secrets/socialdata-api-key    # twitter (optional)"
+echo "       echo 'your-key' > ${SHARED}/secrets/openviking.key        # semantic memory"
 echo "       echo 'bot-token' > ${SHARED}/secrets/telegram/bot-token-${AGENT_ID}"
 echo ""
 echo "    3. Launch agent:"
