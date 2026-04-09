@@ -125,7 +125,9 @@ gh auth login
 
 ## Шаг 6: Разверни архитектуру
 
-Это главный шаг. Скопируй этот промпт в Claude Code:
+Это главный шаг. Имя `claude-code` -- пример. Замени на своё имя агента.
+
+Скопируй этот промпт в Claude Code:
 
 ```
 Изучи архитектуру по ссылке https://github.com/qwwiwi/public-architecture-claude-code и разверни её на этом сервере.
@@ -159,7 +161,7 @@ gh auth login
    ~/.claude-lab/claude-code/.claude/skills/
    ~/.claude-lab/claude-code/.claude/agents/
    ~/.claude-lab/claude-code/.claude/scripts/
-   ~/.claude-lab/claude-code/secrets/ (chmod 700)
+   ~/.claude-lab/shared/secrets/ (chmod 700, shared for all agents)
 
 2. Создай identity-файлы по шаблонам из examples/:
    - ~/.claude-lab/claude-code/.claude/CLAUDE.md (из examples/agent-claude.md) с @include для всех core-файлов
@@ -181,14 +183,18 @@ gh auth login
    - chmod +x .claude/hooks/*.sh
    - Добавь hooks в .claude/settings.json (universal settings из HOOKS.md)
 
-5. Создай скрипты ротации памяти:
-   - scripts/trim-hot.sh -- удаляет записи >72h из hot/recent.md
-   - scripts/rotate-warm.sh -- переносит записи >14d из warm/decisions.md в MEMORY.md
+5. Создай скрипты ротации памяти (в ~/.claude-lab/claude-code/.claude/scripts/):
+   - scripts/trim-hot.sh -- сжимает HOT записи >24h через Sonnet, переносит в WARM
+   - scripts/compress-warm.sh -- повторно сжимает WARM через Sonnet если >10KB
+   - scripts/rotate-warm.sh -- переносит WARM записи >14d в COLD (MEMORY.md)
+   - scripts/memory-rotate.sh -- архивирует COLD >5KB в archive/YYYY-MM.md
    - chmod +x scripts/*.sh
 
-6. Добавь cron jobs:
-   - 0 5 * * * trim-hot.sh
-   - 0 4 * * * rotate-warm.sh
+6. Добавь cron jobs (порядок важен!):
+   - 30 4 * * * scripts/rotate-warm.sh    # 04:30 -- сначала ротация WARM
+   - 0 5 * * * scripts/trim-hot.sh        # 05:00 -- потом сжатие HOT -> WARM
+   - 0 6 * * * scripts/compress-warm.sh   # 06:00 -- потом сжатие WARM
+   - 0 21 * * * scripts/memory-rotate.sh  # 21:00 -- архивация COLD
 
    IMPORTANT: Memory compression is the most important operational feature.
    Without it, HOT memory grows to 80KB+ per day and degrades agent quality.
@@ -258,24 +264,25 @@ https://github.com/RichardAtCT/claude-code-telegram
 
 ---
 
-## Шаг 9 (опционально): Автономный агент с JARVIS Gateway
+## Шаг 9 (опционально): Автономные агенты с Telegram Gateway
 
-Для автономного агента с голосовыми, прогрессом, памятью:
+Для автономных агентов с голосовыми, прогрессом, памятью (1 gateway, 3+ ботов):
 
 ```
-Разверни JARVIS Telegram Gateway по инструкции:
+Разверни Telegram Gateway по инструкции:
 https://github.com/qwwiwi/jarvis-telegram-gateway
 
 1. Склонируй репозиторий
 2. Скопируй config.example.json в config.json
-3. Создай второго бота через @BotFather
-4. Заполни config.json (токен, user ID, workspace)
+3. Создай бота (или несколько) через @BotFather
+4. Заполни config.json (токены, user ID, workspace каждого агента)
 5. Получи Groq API key на https://console.groq.com (для голосовых)
 6. Запусти: python3 gateway.py
 7. (Опционально) Настрой как systemd-сервис для автозапуска
 
-Workspace для JARVIS: ~/.claude-lab/jarvis/.claude/
-Создай отдельные identity-файлы для JARVIS (другой SOUL, другой характер).
+Один gateway -- несколько ботов. Каждый бот = отдельный агент.
+Имена агентов -- примеры. Замени на свои.
+См. MULTI-AGENT.md для архитектуры с 3+ агентами.
 ```
 
 ---
@@ -371,9 +378,11 @@ Workspace для JARVIS: ~/.claude-lab/jarvis/.claude/
 │   ├── skills/                  скиллы агента
 │   ├── agents/                  конфиги субагентов
 │   ├── scripts/
-│   │   ├── trim-hot.sh          cron: удаляет >72h из hot
-│   │   └── rotate-warm.sh       cron: переносит >14d в COLD
-│   └── secrets/                 ключи (chmod 700)
+│   │   ├── trim-hot.sh          cron: сжимает HOT >24h -> WARM
+│   │   ├── compress-warm.sh     cron: сжимает WARM >10KB
+│   │   ├── rotate-warm.sh       cron: переносит >14d -> COLD
+│   │   └── memory-rotate.sh     cron: архивирует COLD >5KB
+│   └── skills/                  скиллы агента
 │
 └── jarvis/.claude/              автономный агент (если шаг 9)
     └── (та же структура)
@@ -455,8 +464,8 @@ A: ~15,000-35,000 из 1,000,000 (2-4% окна Opus 4.6). Основной по
 **Q: Можно без Opus?**
 A: Можно на Sonnet, но Opus лучше справляется с длинным контекстом и @includes.
 
-**Q: Зачем два Telegram-бота?**
-A: Первый (claude-code-telegram) -- интерактивный, работает как терминал. Второй (jarvis-gateway) -- автономный, с голосовыми, прогрессом, памятью.
+**Q: Зачем несколько Telegram-ботов?**
+A: Один бот = один агент. Gateway поддерживает 3+ ботов (координатор, кодер, inbox). Также есть claude-code-telegram (плагин) -- интерактивный терминальный режим.
 
 **Q: Обязательно ли OpenViking?**
 A: Нет. Без него работают 3 из 4 слоёв памяти. [OpenViking](https://github.com/volcengine/OpenViking) добавляет семантический поиск по старым диалогам. Установка: `pip install openviking --upgrade`.

@@ -1,14 +1,16 @@
 # New Agent Checklist
 
+> **NOTE:** `jarvis` is an example name. Replace with your own agent name.
+
 ## 1. Create Workspace
 
 ```bash
-AGENT_NAME="jarvis"
+AGENT_NAME="jarvis"  # ← replace with your agent name
 
 mkdir -p ~/.claude-lab/${AGENT_NAME}/.claude/core/{warm,hot}
 mkdir -p ~/.claude-lab/${AGENT_NAME}/.claude/tools
 mkdir -p ~/.claude-lab/${AGENT_NAME}/.claude/agents
-mkdir -p ~/.claude-lab/${AGENT_NAME}/secrets/telegram
+mkdir -p ~/.claude-lab/${AGENT_NAME}/.claude/scripts
 
 # Symlink shared skills
 ln -s ~/.claude-lab/shared/skills ~/.claude-lab/${AGENT_NAME}/.claude/skills
@@ -45,7 +47,7 @@ Edit `~/.claude-lab/shared/gateway/config.json`:
   "agents": {
     "jarvis": {
       "enabled": true,
-      "telegram_bot_token_file": "~/.claude-lab/jarvis/secrets/telegram/bot-token",
+      "telegram_bot_token_file": "~/.claude-lab/shared/secrets/telegram/bot-token-jarvis",
       "workspace": "~/.claude-lab/jarvis/.claude",
       "model": "opus",
       "timeout_sec": 300
@@ -82,7 +84,7 @@ sudo systemctl start jarvis-gateway
 ## 6. Setup OpenViking Namespace
 
 ```bash
-OV_KEY=$(cat ~/.claude-lab/jarvis/secrets/openviking.key)
+OV_KEY=$(cat ~/.claude-lab/shared/secrets/openviking.key)
 # OpenViking auto-creates namespace on first write
 # Just ensure the key file exists
 ```
@@ -90,11 +92,11 @@ OV_KEY=$(cat ~/.claude-lab/jarvis/secrets/openviking.key)
 ## 7. Setup Cron Jobs
 
 ```bash
-# HOT memory trim (remove entries >72h)
-0 */6 * * * /path/to/trim-hot.sh jarvis
-
-# WARM rotation (move >14d to COLD)
-0 3 * * * /path/to/rotate-warm.sh jarvis
+# Order matters! rotate-warm first, then trim-hot, then compress-warm
+30 4 * * * /path/to/scripts/rotate-warm.sh      # 04:30 -- move WARM >14d to COLD
+0 5 * * * /path/to/scripts/trim-hot.sh           # 05:00 -- compress HOT >24h -> WARM (Sonnet)
+0 6 * * * /path/to/scripts/compress-warm.sh      # 06:00 -- re-compress WARM >10KB (Sonnet)
+0 21 * * * /path/to/scripts/memory-rotate.sh     # 21:00 -- archive COLD >5KB
 ```
 
 ## 8. Test

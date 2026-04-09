@@ -162,12 +162,14 @@ Cron jobs, utilities, automation. NOT loaded into context. Executed by cron or m
 
 Credentials. NEVER loaded into context. NEVER committed to git. NEVER logged.
 
+All secrets in ONE shared folder: `~/.claude-lab/shared/secrets/`
+
 | Path | Role | Access |
 |------|------|--------|
-| **secrets/openviking.key** | OpenViking API key | scripts read, agent NEVER outputs |
-| **secrets/telegram/bot-token** | Telegram bot token | gateway reads, agent NEVER outputs |
-| **~/.secrets/db-service-account.json** | Database service account | message bus reads, agent NEVER outputs |
-| **~/.secrets/groq-api-key** | Groq Whisper API key | transcription reads, agent NEVER outputs |
+| **shared/secrets/openviking.key** | OpenViking API key | scripts read, agent NEVER outputs |
+| **shared/secrets/telegram/bot-token-{agent}** | Telegram bot token (per bot) | gateway reads, agent NEVER outputs |
+| **shared/secrets/db-service-account.json** | Database service account | message bus reads, agent NEVER outputs |
+| **shared/secrets/groq-api-key** | Groq Whisper API key | transcription reads, agent NEVER outputs |
 
 **Who can touch:** Operator only. Agent NEVER reads content, NEVER copies between servers, NEVER commits, NEVER outputs to stdout/stderr.
 

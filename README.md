@@ -8,9 +8,9 @@ Universal architecture for Claude Code agents with local memory layers and seman
 |------|-------------|
 | **[SETUP-GUIDE.md](SETUP-GUIDE.md)** | **End-to-end: от нуля до работающего агента (готовые промпты)** |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Full architecture diagram and flows |
-| **[MULTI-AGENT.md](MULTI-AGENT.md)** | **Мульти-агентная система: Jarvis-оркестратор, OpenViking, .prose workflows** |
+| **[MULTI-AGENT.md](MULTI-AGENT.md)** | **Мульти-агентная система: 3 агента, 3 Telegram-бота, 1 gateway, OpenViking** |
 | **[FILES-REFERENCE.md](FILES-REFERENCE.md)** | **Полная карта каждого файла: роль, кто пишет, когда грузится, доступ** |
-| [STRUCTURE.md](STRUCTURE.md) | Directory layout (single or dual agent) |
+| [STRUCTURE.md](STRUCTURE.md) | Directory layout (single or multi-agent) |
 | [MEMORY.md](MEMORY.md) | 4-layer memory system with token budget |
 | [CHECKLIST.md](CHECKLIST.md) | Step-by-step: create a new agent from scratch |
 | [SKILLS.md](SKILLS.md) | How to create and configure skills |
@@ -31,10 +31,12 @@ Universal architecture for Claude Code agents with local memory layers and seman
 
 ## Two Ways to Connect Telegram
 
+> Agent names are **examples**. Replace with your own.
+
 | Method | Use Case | Repo |
 |--------|----------|------|
 | **claude-code-telegram** (plugin) | Interactive coding via Telegram | [RichardAtCT/claude-code-telegram](https://github.com/RichardAtCT/claude-code-telegram) |
-| **jarvis-telegram-gateway** (standalone) | Autonomous agent with voice, progress, memory | [qwwiwi/jarvis-telegram-gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) |
+| **Telegram Gateway** (standalone) | Autonomous multi-agent: voice, progress, memory, 3+ bots | [qwwiwi/jarvis-telegram-gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) |
 
 ## Architecture at a Glance
 
@@ -45,6 +47,7 @@ Universal architecture for Claude Code agents with local memory layers and seman
 
 ~/.claude-lab/
 ├── shared/                       SHARED
+│   ├── secrets/                  one folder for all secrets
 │   ├── skills/                   shared skills (symlinked)
 │   └── gateway/                  Telegram gateway (optional)
 │

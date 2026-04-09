@@ -1,4 +1,6 @@
-# JARVIS — Autonomous Agent
+# {{AGENT_NAME}} — Autonomous Agent
+
+> **Template:** Replace `{{AGENT_NAME}}` with your agent's name (e.g. Jarvis, Homer, Edith).
 
 ## SOUL
 

@@ -5,7 +5,7 @@
 - **CLAUDE.md**: identity
 - **Core**: AGENTS, USER, rules, warm, hot, MEMORY
 - **Skills**: shared + local
-- **Secrets**: chmod 700
+- **Secrets**: ~/.claude-lab/shared/secrets/ (chmod 700)
 
 ## Servers
 
@@ -25,7 +25,7 @@
 
 - URL: http://127.0.0.1:1933
 - Account: myproject
-- Key: ~/secrets/openviking.key
+- Key: ~/.claude-lab/shared/secrets/openviking.key
 
 ## GitHub
 

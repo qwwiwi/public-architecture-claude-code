@@ -22,5 +22,5 @@
 
 - URL: http://127.0.0.1:1933
 - Account: myproject
-- Key: ~/secrets/openviking.key
+- Key: ~/.claude-lab/shared/secrets/openviking.key
 - Search: POST /api/v1/search/find
