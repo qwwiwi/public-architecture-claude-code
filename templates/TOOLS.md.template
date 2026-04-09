@@ -18,6 +18,31 @@
 | COLD | core/MEMORY.md | on-demand Read |
 | L4 | OpenViking semantic search | curl on-demand |
 
+## 11 Base Skills
+
+| # | Skill | What it does | API key needed |
+|---|-------|-------------|----------------|
+| 1 | **groq-voice** | Voice transcription (Groq Whisper) | groq.com (free) |
+| 2 | **superpowers** | TDD, debugging, planning, code-review, brainstorm | none |
+| 3 | **gws** | Google Workspace: Gmail, Calendar, Drive | Google OAuth |
+| 4 | **youtube-transcript** | YouTube video transcription | none |
+| 5 | **twitter** | Read tweets, profiles, search | optional (SocialData) |
+| 6 | **quick-reminders** | Reminders via nohup sleep | none |
+| 7 | **markdown-new** | Create markdown documents | none |
+| 8 | **excalidraw** | Diagrams and schemas | none |
+| 9 | **datawrapper** | Charts and tables | datawrapper.de (free) |
+| 10 | **perplexity-research** | Web research via Perplexity API | perplexity.ai (paid) |
+| 11 | **vibe-kanban** | Kanban task board (MCP, SQLite) | none |
+
+## Secrets
+
+| What | Path | How to get |
+|------|------|-----------|
+| Groq API | secrets/groq.env | groq.com -- free |
+| Perplexity | secrets/perplexity.env | perplexity.ai -- paid |
+| Google OAuth | secrets/google-credentials.json | console.cloud.google.com |
+| Datawrapper | secrets/datawrapper.env | datawrapper.de -- free |
+
 ## Servers
 
 | Server | IP | Role | SSH |
@@ -33,12 +58,6 @@
 | gateway | -- | Telegram gateway |
 | {{SERVICE_1_NAME}} | {{SERVICE_1_PORT}} | {{SERVICE_1_DESC}} |
 
-## OpenViking
-
-- URL: http://127.0.0.1:1933
-- Account: {{OPENVIKING_ACCOUNT}}
-- Key: ~/.claude-lab/shared/secrets/openviking.key
-
 ## Kanban (vibe-kanban)
 
 - Launch: `npx vibe-kanban` (opens browser UI)
@@ -46,7 +65,6 @@
 - Storage: SQLite (local, no cloud)
 - Tasks: each task gets its own git worktree + branch
 - Statuses: Todo -> InProgress -> InReview -> Done / Cancelled
-- Multi-agent: all agents on same board see the same tasks
 
 ## GitHub
 

@@ -8,11 +8,13 @@ _Stable operational rules and boundaries. Rarely changed. Always in context._
 - Deploy, fixes, git
 - Code review, refactoring
 - Tests, CI/CD
+- Reading documentation
 
 ## Red Zone (ask operator)
 
 - Architecture changes
 - Delete data
+- Deploy to production (without backup)
 - Change models / fallback
 - Spending > ${{BUDGET_LIMIT}}
 - {{RED_ZONE_EXTRA}}
@@ -25,12 +27,24 @@ _Stable operational rules and boundaries. Rarely changed. Always in context._
 - Don't guess configs (check docs, sources, backups)
 - Fix small bugs immediately, large ones -- through operator
 - **Tokens/keys -- NEVER copy between servers without permission**
+- **Production -- ALWAYS backup before changes**
 
 ## Model Red Line
 
 - NEVER change model config without operator permission
 - Don't switch fallback models
 - Don't change model parameters (temperature, max_tokens)
+
+## Skills (mandatory)
+
+- Before starting work -- use superpowers:writing-plans for planning
+- Before writing code -- use superpowers:test-driven-development
+- When debugging -- use superpowers:systematic-debugging
+- After completing -- use superpowers:verification-before-completion
+- Before commit/PR -- use superpowers:requesting-code-review
+- Creative task -- use superpowers:brainstorming
+
+Do not skip skills. They improve work quality.
 
 ## Security
 
@@ -39,6 +53,12 @@ _Stable operational rules and boundaries. Rarely changed. Always in context._
 - `rm -rf`, `DROP TABLE`, `sudo` -- only with explicit confirmation
 - NEVER output API keys, tokens, passwords to stdout/stderr
 - Don't commit .env, *.key, *.pem, secrets/
+
+## Confidence Level
+
+- Fact -- state confidently
+- Assumption -- "it seems like X" (rarely)
+- Don't know -- say "I don't know" (never fabricate data)
 
 ## Git
 
