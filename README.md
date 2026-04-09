@@ -8,6 +8,7 @@ Universal architecture for Claude Code agents with local memory layers and seman
 |------|-------------|
 | **[SETUP-GUIDE.md](SETUP-GUIDE.md)** | **End-to-end: от нуля до работающего агента (готовые промпты)** |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Full architecture diagram and flows |
+| **[MULTI-AGENT.md](MULTI-AGENT.md)** | **Мульти-агентная система: Jarvis-оркестратор, OpenViking, .prose workflows** |
 | **[FILES-REFERENCE.md](FILES-REFERENCE.md)** | **Полная карта каждого файла: роль, кто пишет, когда грузится, доступ** |
 | [STRUCTURE.md](STRUCTURE.md) | Directory layout (single or dual agent) |
 | [MEMORY.md](MEMORY.md) | 4-layer memory system with token budget |
