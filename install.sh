@@ -266,7 +266,7 @@ SKILLS_DST="${SHARED}/skills"
 
 log "Installing base skills..."
 
-SKILL_LIST="groq-voice superpowers markdown-new excalidraw git-workflows skill-creator gws youtube-transcript twitter quick-reminders"
+SKILL_LIST="groq-voice superpowers markdown-new excalidraw git-workflows skill-creator gws youtube-transcript twitter quick-reminders vibe-kanban"
 
 for skill in $SKILL_LIST; do
     if [ -d "${SKILLS_SRC}/${skill}" ]; then
