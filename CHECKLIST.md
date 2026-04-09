@@ -17,7 +17,7 @@ ln -s ~/.claude-lab/shared/skills ~/.claude-lab/${AGENT_NAME}/.claude/skills
 
 # Initialize memory files with headers
 echo "# WARM DECISIONS" > ~/.claude-lab/${AGENT_NAME}/.claude/core/warm/decisions.md
-echo "# Hot memory -- last 72h rolling journal" > ~/.claude-lab/${AGENT_NAME}/.claude/core/hot/recent.md
+echo "# Hot memory -- last 24h rolling journal" > ~/.claude-lab/${AGENT_NAME}/.claude/core/hot/recent.md
 echo "# MEMORY -- Cold Archive" > ~/.claude-lab/${AGENT_NAME}/.claude/core/MEMORY.md
 echo "# LEARNINGS" > ~/.claude-lab/${AGENT_NAME}/.claude/core/LEARNINGS.md
 ```

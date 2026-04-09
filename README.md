@@ -112,7 +112,7 @@ All agents share one board via MCP. Operator sees tasks in browser, agents manag
 ```
 IDENTITY ──── always in context (CLAUDE.md, rules, tools)
 WARM 14d ──── always in context (decisions.md)
-HOT 72h ──── always in context (recent.md, gateway writes)
+HOT 24h ──── always in context (recent.md, gateway writes)
 COLD ──────── Read tool on demand (MEMORY.md)
 L4 ────────── OpenViking search on demand
 ```

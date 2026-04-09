@@ -51,7 +51,7 @@
     │       │   ├── warm/
     │       │   │   └── decisions.md   rolling 14 days
     │       │   ├── hot/
-    │       │   │   └── recent.md      rolling 72 hours
+    │       │   │   └── recent.md      rolling 24 hours
     │       │   ├── MEMORY.md          COLD archive
     │       │   └── LEARNINGS.md       lessons from mistakes
     │       │

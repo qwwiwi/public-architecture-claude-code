@@ -32,7 +32,7 @@ CLAUDE.md                    # SOUL: personality, principles (entry point)
   @core/rules.md             # boundaries, security
   @tools/TOOLS.md            # servers, services, paths
   @core/warm/decisions.md    # rolling 14-day memory
-  @core/hot/recent.md        # rolling 72h journal
+  @core/hot/recent.md        # rolling 24h journal
 ```
 
 ---
@@ -41,7 +41,7 @@ CLAUDE.md                    # SOUL: personality, principles (entry point)
 
 | Concept | OpenClaw | Claude Code (official) | Our Architecture |
 |---------|----------|----------------------|-----------------|
-| Short-term journal | `memory/YYYY-MM-DD.md` (daily) | _(auto memory)_ | `core/hot/recent.md` (72h rolling) |
+| Short-term journal | `memory/YYYY-MM-DD.md` (daily) | _(auto memory)_ | `core/hot/recent.md` (24h rolling) |
 | Medium-term decisions | _(inside MEMORY.md)_ | _(auto memory)_ | `core/warm/decisions.md` (14d rolling) |
 | Long-term archive | `MEMORY.md` (manual curated) | `~/.claude/projects/*/memory/MEMORY.md` | `core/MEMORY.md` (cold, on-demand) |
 | Lessons from mistakes | _(inside MEMORY.md)_ | _(auto memory)_ | `core/LEARNINGS.md` (on-demand) |
@@ -50,7 +50,7 @@ CLAUDE.md                    # SOUL: personality, principles (entry point)
 ### How memory compression works
 
 ```
-Gateway writes -> HOT (72h, full dialogue)
+Gateway writes -> HOT (24h, full dialogue)
                     |
               trim-hot.sh (cron 05:00 UTC)
                     |
@@ -122,7 +122,7 @@ We use **cron + Sonnet compression** -- automated, predictable, agent-independen
 | `~/.claude-lab/{agent}/.claude/` | Per-agent project directory | Claude Code project scope |
 | `core/` | Identity + memory files | Our convention (core = essential) |
 | `core/warm/` | 14-day rolling memory | Our convention (warm = recent) |
-| `core/hot/` | 72h rolling journal | Our convention (hot = very recent) |
+| `core/hot/` | 24h rolling journal | Our convention (hot = very recent) |
 | `tools/` | Infrastructure descriptions | OpenClaw convention (TOOLS.md) |
 | `skills/` | Callable commands | Claude Code official |
 | `agents/` | Subagent definitions | Claude Code official |

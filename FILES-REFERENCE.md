@@ -61,7 +61,7 @@ Rolling 14-day memory. Auto-compressed. Loaded every session.
 
 ## Layer 4: Memory -- HOT (`core/hot/`)
 
-Rolling 72h journal. Every conversation turn recorded. Loaded every session.
+Rolling 24h journal. Every conversation turn recorded. Loaded every session.
 
 | File | Role | Loads | Writer | Access |
 |------|------|-------|--------|--------|

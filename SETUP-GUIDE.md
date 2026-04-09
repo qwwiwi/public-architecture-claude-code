@@ -129,7 +129,7 @@ bash install.sh
     │   ├── USER.md              твой профиль
     │   ├── rules.md             границы, запреты
     │   ├── warm/decisions.md    решения (14 дней)
-    │   ├── hot/recent.md        журнал (72 часа)
+    │   ├── hot/recent.md        журнал (24 часа)
     │   ├── MEMORY.md            архив
     │   └── LEARNINGS.md         уроки из ошибок
     ├── tools/TOOLS.md           серверы, порты, Docker

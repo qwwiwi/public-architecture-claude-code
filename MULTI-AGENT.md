@@ -152,7 +152,7 @@ Telegram
 │       │   ├── USER.md               # Operator profile
 │       │   ├── rules.md              # Boundaries, permissions
 │       │   ├── warm/decisions.md     # 14d rolling decisions
-│       │   ├── hot/recent.md         # 72h rolling journal
+│       │   ├── hot/recent.md         # 24h rolling journal
 │       │   └── MEMORY.md             # COLD archive
 │       ├── tools/TOOLS.md            # Servers, Docker, services
 │       ├── skills/                    # Agent-specific + symlinks to shared
@@ -317,7 +317,7 @@ Todo  -->  InProgress  -->  InReview  -->  Done
            Cancelled
 ```
 
-Each task = separate git worktree + branch. Completed worktrees auto-cleanup after 72h.
+Each task = separate git worktree + branch. Completed worktrees auto-cleanup after 24h.
 
 ## Inter-Agent Communication
 

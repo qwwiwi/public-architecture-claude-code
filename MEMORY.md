@@ -12,7 +12,7 @@
 │  core/warm/decisions.md                   │
 │  Always in context, auto-rotate to COLD   │
 ├──────────────────────────────────────────┤
-│  HOT (rolling 72 hours)                  │
+│  HOT (rolling 24 hours)                  │
 │  core/hot/recent.md                       │
 │  Always in context, gateway auto-writes   │
 ├──────────────────────────────────────────┤
@@ -45,12 +45,12 @@
 - Rotation: entries older than 14 days move to COLD (MEMORY.md)
 - Always in context via @include
 
-### HOT (rolling 72 hours)
+### HOT (rolling 24 hours)
 
 - File: `core/hot/recent.md`
 - Contains: conversation journal (every message + response)
 - Written by: Gateway process (auto-write after each interaction)
-- Trim: cron job removes entries older than 72h
+- Trim: cron job removes entries older than 24h
 - Always in context via @include
 - WARNING: can grow to 80KB+ and consume 70%+ of startup tokens
 
@@ -77,7 +77,7 @@
 
 - Endpoint: `localhost:1933`
 - NOT loaded at startup
-- Accessed via curl when old context needed (>72h)
+- Accessed via curl when old context needed (>24h)
 - Each agent has own namespace (User header)
 - Search: `POST /api/v1/search/find`
 - Stores embeddings of past conversations

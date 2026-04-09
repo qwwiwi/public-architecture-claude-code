@@ -31,7 +31,7 @@ Claude Code launch
     ├── @core/rules.md            boundaries
     ├── @tools/TOOLS.md           servers, tools
     ├── @core/warm/decisions.md   rolling 14 days
-    └── @core/hot/recent.md       rolling 72 hours
+    └── @core/hot/recent.md       rolling 24 hours
 
 ~15-35K tokens depending on HOT size
 ```
@@ -184,7 +184,7 @@ localhost:1933
 │   forwarded    → yes (with anti-pollution guard)
 │   external_media → NO (hot only, avoids preference pollution)
 │
-└── Search: when old context needed (>72h)
+└── Search: when old context needed (>24h)
     POST /api/v1/search/find
     {"query": "topic", "limit": 10}
 ```
