@@ -32,7 +32,7 @@ Per-agent identity. Loaded every session via `@include` directives in CLAUDE.md.
 | File | Role | Loads | Writer | Access |
 |------|------|-------|--------|--------|
 | **CLAUDE.md** | SOUL -- agent character, personality, principles, priorities, workflow rules. Contains `@include` directives that pull in other files | always | operator (manual) | agent reads, only operator edits |
-| **core/AGENTS.md** | Operating rules: models, Firebase paths, subagent config, cross-review rules, pipelines, analytics | always (@include) | operator (manual) | agent reads, only operator edits |
+| **core/AGENTS.md** | Operating rules: models, message bus paths, subagent config, cross-review rules, pipelines, analytics | always (@include) | operator (manual) | agent reads, only operator edits |
 | **core/USER.md** | Operator profile: name, timezone, channels, products, communication style | always (@include) | operator (manual) | agent reads, only operator edits |
 | **core/rules.md** | Boundaries: what agent can/cannot do, red zones, security, git policy, Telegram rules | always (@include) | operator (manual) | agent reads, only operator edits |
 | **tools/TOOLS.md** | Infrastructure map: servers, SSH, Docker, systemd, ports, GitHub, secrets paths | always (@include) | operator (manual) or agent with permission | agent reads, agent can suggest edits |
@@ -87,7 +87,7 @@ Archive. NOT loaded into session context. Accessed via Read tool when needed.
 | File | Role | Loads | Writer | Access |
 |------|------|-------|--------|--------|
 | **MEMORY.md** | Permanent archive of decisions rotated from WARM (>14 days). May contain months of history | on-demand (Read tool) | **rotate-warm.sh** (cron, appends old WARM entries), **memory-rotate.sh** (cron, archives to monthly files) | agent reads on-demand, cron writes |
-| **LEARNINGS.md** | Lessons from mistakes: context, what went wrong, correct approach, rule | on-demand (Read tool) | agent (during session when learning occurs), Firebase push | agent reads/writes, operator reads |
+| **LEARNINGS.md** | Lessons from mistakes: context, what went wrong, correct approach, rule | on-demand (Read tool) | agent (during session when learning occurs) | agent reads/writes, operator reads |
 | **archive/*.md** | Monthly archives (`2026-04.md`, `2026-03.md`). MEMORY.md archived here when >5KB | never (manual Read) | **memory-rotate.sh** (cron) | read-only archive |
 
 **Who can touch:** Cron scripts (automated archival), agent (append learnings), operator (full access).
@@ -121,7 +121,7 @@ Callable skills. NOT loaded at session start. Loaded on-demand when Skill tool i
 | **skills/{name}/*.sh** | Shell scripts used by skill | on-demand (skill execution) | developer (manual) | agent executes |
 | **skills/{name}/*.py** | Python scripts used by skill | on-demand (skill execution) | developer (manual) | agent executes |
 
-**Current skills (15):** agent-messaging, content-engine, edgelab-content, edgelab-ideas, firebase-ops, forum-guides-authoring-portal, git-workflows, groq-voice, learnings, perplexity-pro-research, perplexity-research, skill-creator, skill-finder, task-board, twitter
+**Example skills:** agent-messaging, content-engine, groq-voice, learnings, web-search, skill-creator, skill-finder, task-board, git-workflows
 
 **Who can touch:** Developer/operator creates skills. Agent can use but not modify.
 
@@ -150,9 +150,9 @@ Cron jobs, utilities, automation. NOT loaded into context. Executed by cron or m
 | **rotate-warm.sh** | Move WARM >14d to COLD | cron 04:30 UTC daily | developer |
 | **memory-rotate.sh** | Archive COLD >5KB to monthly files | cron 21:00 UTC daily | developer |
 | **backup-daily.sh** | Backup VPS data to DO Spaces | cron daily | developer |
-| **firebase-backup.sh** | Backup Firebase RTDB | cron daily | developer |
-| **heartbeat-ping.sh** | Agent heartbeat to Firebase | cron periodic | developer |
-| **task-dispatcher.sh** | Route tasks from Firebase to agents | cron / manual | developer |
+| **db-backup.sh** | Backup message bus / task DB | cron daily | developer |
+| **heartbeat-ping.sh** | Agent heartbeat to status DB | cron periodic | developer |
+| **task-dispatcher.sh** | Route tasks from DB to agents | cron / manual | developer |
 
 **Who can touch:** Developer/operator creates and maintains. Cron executes. Agent can read but should not modify without permission.
 
@@ -166,7 +166,7 @@ Credentials. NEVER loaded into context. NEVER committed to git. NEVER logged.
 |------|------|--------|
 | **secrets/openviking.key** | OpenViking API key | scripts read, agent NEVER outputs |
 | **secrets/telegram/bot-token** | Telegram bot token | gateway reads, agent NEVER outputs |
-| **~/.secrets/firebase/sa-{agent}.json** | Firebase service account | orgbus reads, agent NEVER outputs |
+| **~/.secrets/db-service-account.json** | Database service account | message bus reads, agent NEVER outputs |
 | **~/.secrets/groq-api-key** | Groq Whisper API key | transcription reads, agent NEVER outputs |
 
 **Who can touch:** Operator only. Agent NEVER reads content, NEVER copies between servers, NEVER commits, NEVER outputs to stdout/stderr.

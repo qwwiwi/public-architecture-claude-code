@@ -165,7 +165,7 @@ OPERATOR (you)
     │   └── ...
     └── tokens/                        # API tokens
         ├── groq-api-key
-        └── firebase-sa.json
+        └── db-service-account.json
 ```
 
 ## How OpenViking Replaces Shared State
@@ -194,7 +194,7 @@ NEW: OpenViking semantic DB
               ▼     ▼     ▼     ▼   ▼
          ┌──────────────────────────────┐
          │         OPENVIKING           │
-         │  account: orgrimmar          │
+         │  account: my-team          │
          │  users: jarvis, friday, ...  │
          │                              │
          │  ┌─── Semantic Index ───┐    │
@@ -229,13 +229,13 @@ Each agent writes under its own user namespace but can search across all:
 OV_KEY=$(cat ~/.claude-lab/jarvis/secrets/openviking.key)
 curl -X POST "http://127.0.0.1:1933/api/v1/sessions" \
   -H "X-API-Key: $OV_KEY" \
-  -H "X-OpenViking-Account: orgrimmar" \
+  -H "X-OpenViking-Account: my-team" \
   -H "X-OpenViking-User: jarvis"       # ← namespace
 
 # Any agent can search across ALL namespaces
 curl -X POST "http://127.0.0.1:1933/api/v1/search/find" \
   -H "X-API-Key: $OV_KEY" \
-  -H "X-OpenViking-Account: orgrimmar" \
+  -H "X-OpenViking-Account: my-team" \
   -H "X-OpenViking-User: jarvis" \
   -d '{"query": "what did homer decide about the API design", "limit": 10}'
 ```
@@ -337,17 +337,17 @@ Gateway routes based on which bot received the message.
 }
 ```
 
-### Via Firebase Messages (Agent-to-Agent)
+### Via Message Bus (Agent-to-Agent)
 
-Agents communicate through Firebase RTDB inbox:
+Agents communicate through a shared message bus (any DB with inbox pattern works -- Redis, SQLite, RTDB, etc.):
 
 ```bash
 # Jarvis delegates to Homer
-orgbus push messages/inbox/homer \
+msgbus send homer \
   '{"from":"jarvis","body":"Build the API endpoint for /users","priority":"P1"}'
 
 # Homer reads inbox
-orgbus get messages/inbox/homer
+msgbus inbox homer
 ```
 
 ### Via OpenViking (Shared Knowledge)
@@ -439,7 +439,7 @@ STEPS:
 
 1. **Agent workspaces are private** -- Homer cannot read Karen's hot/recent.md
 2. **OpenViking is shared** -- any agent can search, writes are namespaced
-3. **Firebase inbox is per-agent** -- only the recipient reads their inbox
+3. **Message bus inbox is per-agent** -- only the recipient reads their inbox
 4. **Secrets are per-agent** -- each agent has its own keys
 5. **Gateway state is per-agent** -- session IDs isolated per (agent, chat)
 6. **Orchestration programs are shared** -- all agents can read templates
