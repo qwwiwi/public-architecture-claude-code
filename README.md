@@ -37,24 +37,33 @@ Universal architecture for Claude Code agents with local memory layers and seman
 | [scripts/](scripts/) | Memory management scripts (trim-hot, compress-warm, rotate) |
 | [skills/](skills/) | Recommended skills (Superpowers, etc.) |
 
+## Quick Install (one command)
+
+```bash
+git clone https://github.com/qwwiwi/public-architecture-claude-code.git
+cd public-architecture-claude-code
+bash install.sh
+```
+
+The script asks agent name, role, model, your name -- then creates the full workspace with all files filled in. Run again to add more agents.
+
 ## Quick Start
 
 ### Beginners (first agent)
 
-1. Follow [SETUP-GUIDE.md](SETUP-GUIDE.md) -- 10 steps from zero to working agent
-2. Create your first agent with [FIRST-AGENT.md](FIRST-AGENT.md)
+1. Run `bash install.sh` -- creates workspace in 2 minutes
+2. Read [FIRST-AGENT.md](FIRST-AGENT.md) to understand what each file does
 3. Learn commands from [COMMANDS-QUICKREF.md](COMMANDS-QUICKREF.md)
 4. Optimize tokens with [TOKEN-OPTIMIZATION.md](TOKEN-OPTIMIZATION.md)
+5. Detailed walkthrough: [SETUP-GUIDE.md](SETUP-GUIDE.md)
 
 ### Experienced (full architecture)
 
-1. Clone this repo
-2. Copy templates from [templates/](templates/) and fill {{placeholders}}
-3. Or follow [CHECKLIST.md](CHECKLIST.md) manually
-4. See [MAPPING.md](MAPPING.md) for design decisions (OpenClaw vs Claude Code vs ours)
-5. Set up [Telegram Gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) for multi-agent
-6. Deploy [OpenViking](https://github.com/volcengine/OpenViking) for semantic memory
-7. See [MULTI-AGENT.md](MULTI-AGENT.md) for 3-agent architecture
+1. Run `bash install.sh` or fill [templates/](templates/) manually
+2. See [MAPPING.md](MAPPING.md) for design decisions (OpenClaw vs Claude Code vs ours)
+3. Set up [Telegram Gateway](https://github.com/qwwiwi/jarvis-telegram-gateway) for multi-agent
+4. Deploy [OpenViking](https://github.com/volcengine/OpenViking) for semantic memory
+5. See [MULTI-AGENT.md](MULTI-AGENT.md) for 3-agent architecture
 
 ## Two Ways to Connect Telegram
 
