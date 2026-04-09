@@ -113,14 +113,14 @@ bash install.sh
 │       ├── groq-voice/          транскрибация голосовых (Groq Whisper)
 │       ├── superpowers/         TDD, дебаг, ревью
 │       ├── vibe-kanban/         канбан-доска задач
-│       ├── git-workflows/       rebase, worktrees, cherry-pick
+│       ├── datawrapper/          графики и таблицы (Datawrapper API)
 │       ├── gws/                 Google Workspace
 │       ├── youtube-transcript/  транскрибация YouTube
 │       ├── twitter/             чтение твитов
 │       ├── quick-reminders/     напоминания
 │       ├── markdown-new/        генерация markdown
 │       ├── excalidraw/          диаграммы
-│       └── skill-creator/       создание новых скиллов
+│       └── perplexity-research/  веб-ресёрч (Perplexity API)
 │
 └── homer/.claude/               твой агент
     ├── CLAUDE.md                SOUL + @include (identity)
@@ -149,7 +149,7 @@ pip install pytest
 python3 -m pytest tests/ -v
 ```
 
-Должно пройти 348 тестов. Они проверяют: все скиллы на месте, шаблоны корректные, секреты не утекли, vibe-kanban прописан везде.
+Должно пройти 460 тестов. Они проверяют: все скиллы на месте, шаблоны корректные, секреты не утекли, vibe-kanban прописан везде.
 
 ---
 

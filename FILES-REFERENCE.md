@@ -139,7 +139,7 @@ Callable skills. NOT loaded at session start. Loaded on-demand when Skill tool i
 | **skills/{name}/*.sh** | Shell scripts used by skill | on-demand (skill execution) | developer (manual) | agent executes |
 | **skills/{name}/*.py** | Python scripts used by skill | on-demand (skill execution) | developer (manual) | agent executes |
 
-**Example skills:** agent-messaging, content-engine, groq-voice, learnings, web-search, skill-creator, skill-finder, task-board, git-workflows
+**Example skills:** groq-voice, superpowers, gws, youtube-transcript, twitter, quick-reminders, markdown-new, excalidraw, datawrapper, perplexity-research, vibe-kanban
 
 **Who can touch:** Developer/operator creates skills. Agent can use but not modify.
 
@@ -167,10 +167,6 @@ Cron jobs, utilities, automation. NOT loaded into context. Executed by cron or m
 | **compress-warm.sh** | Re-compress WARM via Sonnet if >10KB | cron 06:00 UTC daily | developer |
 | **rotate-warm.sh** | Move WARM >14d to COLD | cron 04:30 UTC daily | developer |
 | **memory-rotate.sh** | Archive COLD >5KB to monthly files | cron 21:00 UTC daily | developer |
-| **backup-daily.sh** | Backup VPS data to DO Spaces | cron daily | developer |
-| **db-backup.sh** | Backup message bus / task DB | cron daily | developer |
-| **heartbeat-ping.sh** | Agent heartbeat to status DB | cron periodic | developer |
-| **task-dispatcher.sh** | Route tasks from DB to agents | cron / manual | developer |
 
 **Who can touch:** Developer/operator creates and maintains. Cron executes. Agent can read but should not modify without permission.
 

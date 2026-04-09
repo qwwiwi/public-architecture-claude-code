@@ -20,6 +20,9 @@
 4. Break into atomic chunks
 5. Commit after each chunk
 6. Tests immediately
+7. Documentation first -- read docs before building
+8. Backup in production -- NEVER delete without backup
+9. Use skills -- always apply superpowers for planning, TDD, debugging, review
 
 ## Memory Layers
 

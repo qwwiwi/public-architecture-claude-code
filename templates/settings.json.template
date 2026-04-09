@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude-lab/shared/scripts/block-dangerous.sh",
+            "command": "echo 'BLOCKED: dangerous command' && exit 2",
             "timeout": 5
           }
         ]

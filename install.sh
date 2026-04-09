@@ -258,7 +258,7 @@ for script in trim-hot.sh compress-warm.sh rotate-warm.sh memory-rotate.sh; do
 done
 
 # ============================================================
-# Step 7: Install shared skills (10 base skills)
+# Step 7: Install shared skills (11 base skills)
 # ============================================================
 
 SKILLS_SRC="${SCRIPT_DIR}/skills"
@@ -266,7 +266,7 @@ SKILLS_DST="${SHARED}/skills"
 
 log "Installing base skills..."
 
-SKILL_LIST="groq-voice superpowers markdown-new excalidraw git-workflows skill-creator gws youtube-transcript twitter quick-reminders vibe-kanban"
+SKILL_LIST="groq-voice superpowers markdown-new excalidraw datawrapper perplexity-research gws youtube-transcript twitter quick-reminders vibe-kanban"
 
 for skill in $SKILL_LIST; do
     if [ -d "${SKILLS_SRC}/${skill}" ]; then
@@ -390,6 +390,8 @@ echo "    2. Add API keys for skills:"
 echo "       echo 'your-key' > ${SHARED}/secrets/groq-api-key          # groq-voice (free)"
 echo "       echo 'your-key' > ${SHARED}/secrets/transcript-api-key    # youtube (free 100)"
 echo "       echo 'your-key' > ${SHARED}/secrets/socialdata-api-key    # twitter (optional)"
+echo "       echo 'your-key' > ${SHARED}/secrets/datawrapper.env       # datawrapper (free)"
+echo "       echo 'your-key' > ${SHARED}/secrets/perplexity.env        # perplexity (paid)"
 echo "       echo 'your-key' > ${SHARED}/secrets/openviking.key        # semantic memory"
 echo "       echo 'bot-token' > ${SHARED}/secrets/telegram/bot-token-${AGENT_ID}"
 echo ""

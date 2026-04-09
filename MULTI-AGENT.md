@@ -2,7 +2,7 @@
 
 Multi-agent system with coordinator, specialized agents, shared state via OpenViking, and one Telegram gateway routing to multiple bots.
 
-> **NOTE:** Agent names (Jarvis, Homer, Edith) are **examples**. When copying this architecture, replace them with your own names. The `install-local.sh` script handles renaming automatically.
+> **NOTE:** Agent names (Jarvis, Homer, Edith) are **examples**. When copying this architecture, replace them with your own names. The `install.sh` script handles renaming automatically.
 
 ## Overview
 
@@ -34,7 +34,7 @@ OPERATOR (you)
               └───────────────────┘
 ```
 
-> **Scaling:** Add a 4th agent = add a block in `config.json` + create bot in BotFather + run `install-local.sh`. One-click.
+> **Scaling:** Add a 4th agent = add a block in `config.json` + create bot in BotFather + run `install.sh`. One-click.
 
 ## Agents
 
@@ -172,12 +172,6 @@ Telegram
 │       ├── tools/TOOLS.md
 │       └── skills/
 │
-├── _template/                          # ONE-CLICK new agent
-│   └── .claude/
-│       ├── CLAUDE.md.template         # SOUL template with placeholders
-│       ├── core/                      # Empty structure
-│       └── install.sh                 # Bootstrap script
-│
 ├── shared/                             # SHARED RESOURCES (all agents)
 │   ├── secrets/                       # ONE folder for all secrets
 │   │   ├── .env                       # Shared env vars
@@ -193,26 +187,9 @@ Telegram
 │   │   └── .vibe-kanban/             # SQLite DB, auto-created by npx
 │   └── skills/                        # Shared skills (symlinked)
 │       ├── groq-voice/               # Voice transcription
-│       ├── web-search/               # Web search
-│       ├── task-board/               # Task management
-│       └── ...
-│
-├── bin/                                # UTILITY SCRIPTS
-│   ├── install-local.sh               # Bootstrap new agent workspace
-│   ├── doctor.sh                      # Health check all agents
-│   ├── daily-rollup.sh                # Aggregate daily summaries
-│   └── memory-gc.sh                   # Garbage collect old memory
-│
-└── orchestration/                      # GLOBAL ORCHESTRATION
-    ├── programs/                      # Reusable workflow templates
-    │   ├── research_brief.prose
-    │   ├── build_feature.prose
-    │   └── incident_triage.prose
-    ├── routers/
-    │   └── default_router.md
-    └── templates/
-        ├── status_report.md
-        └── incident_report.md
+│       ├── superpowers/              # TDD, debugging, planning, review
+│       ├── vibe-kanban/              # Kanban task board (MCP)
+│       └── ...                       # (11 base skills total)
 ```
 
 ## Key Design Decisions
@@ -233,8 +210,8 @@ Why: fewer places to manage, rotate, and audit. Agents access via symlinks or en
 
 | Type | Path | Example | Who uses |
 |------|------|---------|----------|
-| **Shared** | `shared/skills/` | groq-voice, web-search, task-board | All agents (symlinked) |
-| **Specialized** | `{agent}/.claude/skills/` | code-review (Homer), content-sort (Edith) | Only that agent |
+| **Shared** | `shared/skills/` | groq-voice, superpowers, vibe-kanban | All agents (symlinked) |
+| **Specialized** | `{agent}/.claude/skills/` | custom agent-specific skills | Only that agent |
 
 Shared skills are symlinked into each agent's `skills/` at install time. Specialized skills live only in the agent's workspace.
 
@@ -413,29 +390,18 @@ STEPS:
 ## Adding a New Agent (One-Click)
 
 ```bash
-# 1. Create Telegram bot via BotFather
-# 2. Run install script
-bash ~/.claude-lab/bin/install-local.sh \
-  --name "friday" \
-  --role "researcher" \
-  --bot-token "$NEW_BOT_TOKEN"
+# 1. Create Telegram bot via BotFather (optional)
+# 2. Run install script (from cloned repo)
+cd public-architecture-claude-code
+bash install.sh
 
 # What it does:
-# - Creates ~/.claude-lab/friday/.claude/ with all dirs
-# - Copies CLAUDE.md.template, replaces {{AGENT_NAME}} and {{ROLE}}
-# - Symlinks shared skills
-# - Adds agent to gateway config.json
-# - Restarts gateway
+# - Asks agent name, role, model, your name
+# - Creates ~/.claude-lab/{agent}/.claude/ with all dirs
+# - Fills templates, replaces {{AGENT_NAME}} etc.
+# - Installs 11 base skills (symlinked)
+# - Sets up cron scripts for memory management
 ```
-
-## Utility Scripts (bin/)
-
-| Script | What it does | When |
-|--------|-------------|------|
-| **install-local.sh** | Bootstrap new agent workspace | Once per new agent |
-| **doctor.sh** | Health check: files, secrets, services | Manual or cron weekly |
-| **daily-rollup.sh** | Aggregate HOT summaries from all agents | Cron daily |
-| **memory-gc.sh** | Archive old COLD files, clean temp media | Cron weekly |
 
 ## Memory Flow
 

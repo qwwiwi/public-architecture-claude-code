@@ -25,9 +25,9 @@
     │   │       └── bot-token-agent2
     │   ├── skills/                    shared skills (symlinked)
     │   │   ├── groq-voice/            voice transcription
-    │   │   ├── web-search/            web search
-    │   │   ├── super-power/           super-power skill
-    │   │   └── ...
+    │   │   ├── superpowers/           TDD, debugging, planning, review
+    │   │   ├── vibe-kanban/           kanban task board (MCP)
+    │   │   └── ...                    (11 base skills total)
     │   └── gateway/                   Telegram gateway
     │       ├── gateway.py
     │       ├── config.json
