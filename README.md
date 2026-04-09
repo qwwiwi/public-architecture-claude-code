@@ -10,6 +10,7 @@ Universal architecture for Claude Code agents with local memory layers and seman
 |------|-------------|
 | **[SETUP-GUIDE.md](SETUP-GUIDE.md)** | **End-to-end: от нуля до работающего агента (готовые промпты)** |
 | **[FIRST-AGENT.md](FIRST-AGENT.md)** | **Твой первый агент: пошагово от workspace до Telegram** |
+| **[AGENT-LAWS.md](AGENT-LAWS.md)** | **Иерархия, правила и законы агентов: 9 принципов, зоны автономности, скиллы** |
 | **[COMMANDS-QUICKREF.md](COMMANDS-QUICKREF.md)** | **Шпаргалка команд: /plan, /tdd, /code-review, decision tree** |
 | **[TOKEN-OPTIMIZATION.md](TOKEN-OPTIMIZATION.md)** | **Оптимизация токенов: экономия 60-70% с первого дня** |
 
