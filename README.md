@@ -85,6 +85,7 @@ The script asks agent name, role, model, your name -- then creates the full work
 ├── shared/                       SHARED
 │   ├── secrets/                  one folder for all secrets
 │   ├── skills/                   shared skills (symlinked)
+│   ├── kanban/                   vibe-kanban task board (SQLite)
 │   └── gateway/                  Telegram gateway (optional)
 │
 ├── agent-1/.claude/              WORKSPACE: Agent 1
@@ -96,6 +97,14 @@ The script asks agent name, role, model, your name -- then creates the full work
 └── agent-2/.claude/              WORKSPACE: Agent 2
     └── (same structure)
 ```
+
+## Task Board
+
+```
+npx vibe-kanban              # opens browser kanban UI
+```
+
+All agents share one board via MCP. Operator sees tasks in browser, agents manage via `list_workspaces` / `create_session` tools. Data: local SQLite, no cloud.
 
 ## Memory Layers
 
