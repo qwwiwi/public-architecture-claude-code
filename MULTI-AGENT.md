@@ -40,11 +40,34 @@ OPERATOR (you)
 
 > **These are example roles.** You might want: researcher + coder + devops, or marketer + coder + assistant, or any other combination.
 
-| Agent | Role | What it does | Telegram bot |
-|-------|------|-------------|--------------|
-| **Jarvis** | Coordinator | Routes tasks, coordinates agents, marketing, general management | `@jarvis_bot` |
-| **Homer** | Coder | Writes code, tests, deploys, builds features, code review | `@homer_bot` |
-| **Edith** | Inbox / Knowledge | Receives info, organizes into folders, research, knowledge base | `@edith_bot` |
+| Agent | Role | Model | Subagents | Telegram bot |
+|-------|------|-------|-----------|--------------|
+| **Jarvis** | Coordinator | **Opus** | Many Sonnet subagents (search, analysis) | `@jarvis_bot` |
+| **Homer** | Coder | **Opus** | Per-skill model (varies) | `@homer_bot` |
+| **Edith** | Inbox / Knowledge | **Sonnet** | -- | `@edith_bot` |
+
+### Why these models?
+
+- **Jarvis** on Opus: coordinator needs deep reasoning for task routing, planning, multi-step workflows. Delegates bulk search/analysis to cheap Sonnet subagents.
+- **Homer** on Opus: code quality is critical -- Opus produces better architecture, fewer bugs. Skills may use other models for specific tasks (e.g. Codex for review).
+- **Edith** on Sonnet: inbox agent processes high volume of links, videos, articles. Sonnet handles parsing and summarization well at lower cost.
+
+### Edith capabilities (universal inbox)
+
+Edith is the "throw everything at it" agent. Send any link or content:
+
+| Input | What Edith does |
+|-------|----------------|
+| **YouTube link** | Downloads audio, transcribes via Groq Whisper, summarizes |
+| **Twitter/X link** | Reads tweet, thread, or profile |
+| **Reddit link** | Reads post and top comments |
+| **GitHub repo** | Clones, reads README, analyzes structure |
+| **Instagram** | Fetches post via media downloader API |
+| **Web article** | Fetches and reads full page |
+| **PDF / document** | Downloads and extracts text |
+| **Voice message** | Transcribes via Groq Whisper |
+
+All processed content is stored in Edith's memory and pushed to OpenViking for cross-agent search.
 
 ## Gateway: 1 Process, 3 Bots
 
@@ -79,18 +102,21 @@ Telegram
       "name": "jarvis",
       "bot_token_env": "TG_TOKEN_JARVIS",
       "workspace": "~/.claude-lab/jarvis/.claude",
+      "model": "opus",
       "role": "coordinator"
     },
     {
       "name": "homer",
       "bot_token_env": "TG_TOKEN_HOMER",
       "workspace": "~/.claude-lab/homer/.claude",
+      "model": "opus",
       "role": "coder"
     },
     {
       "name": "edith",
       "bot_token_env": "TG_TOKEN_EDITH",
       "workspace": "~/.claude-lab/edith/.claude",
+      "model": "sonnet",
       "role": "inbox"
     }
   ],
