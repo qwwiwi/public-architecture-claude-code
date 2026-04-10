@@ -217,7 +217,7 @@ Gateway (every message) -> HOT (recent.md)
   |     COLD >5KB -> archive/YYYY-MM.md (pure bash)
   |
   +-- /compact command (manual, Sonnet)
-  |     Extract key facts from last 24h HOT -> WARM, trim HOT to 48h
+  |     Extract key facts from last 24h HOT -> WARM, trim HOT to 24h
   |
   +-- /reset command (manual, Sonnet)
         Save important context to COLD, start new session
@@ -251,7 +251,7 @@ Order: rotate-warm (clear old) -> trim-hot (add new to WARM) -> compress-warm (r
 
 | Command | What it does |
 |---------|-------------|
-| `/compact` | Extract key facts from last 24h HOT → WARM, trim HOT to 48h |
+| `/compact` | Extract key facts from last 24h HOT → WARM, trim HOT to 24h |
 | `/reset` | Save important context to COLD (MEMORY.md), start new session |
 | `/reset force` | Delete session immediately, no save |
 | `/status` | Show session age, memory file sizes (rules, warm, hot, cold) |

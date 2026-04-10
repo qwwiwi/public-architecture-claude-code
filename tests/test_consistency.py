@@ -172,6 +172,26 @@ class TestOpenVikingSyncMethod:
 class TestHotMemorySize:
     """HOT memory size claims must be consistent."""
 
+    def test_hot_rolling_24h_not_48h(self) -> None:
+        """HOT memory must be described as 24h rolling, never 48h or 72h."""
+        violations: list[tuple[str, int, str]] = []
+        for path, content in ALL_MD.items():
+            for i, line in enumerate(content.splitlines(), 1):
+                low = line.lower()
+                # Skip skills that legitimately use 48h/72h for other purposes
+                if "skills/" in path:
+                    continue
+                # Check for 48h/72h in HOT context
+                if ("hot" in low or "trim" in low or "recent.md" in low) and (
+                    "48h" in low or "48 h" in low or "72h" in low or "72 h" in low
+                ):
+                    violations.append((path, i, line.strip()))
+
+        assert not violations, (
+            "Found 48h/72h references in HOT memory context (should be 24h):\n"
+            + "\n".join(f"  {p}:{n}: {l}" for p, n, l in violations)
+        )
+
     def test_hot_size_warning_clarified(self) -> None:
         """80KB+ warning must mention it's before cron, not typical size."""
         content = ALL_MD.get("MEMORY.md", "")

@@ -120,7 +120,7 @@ Operator sends `/compact` in Telegram:
    ## YYYY-MM-DD
    - fact 1
    - fact 2
-4. Trim hot/recent.md: keep last 48h only
+4. Trim hot/recent.md: keep last 24h only
 ```
 
 - Model: Sonnet (cheaper, fast enough for extraction)
