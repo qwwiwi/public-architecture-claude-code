@@ -113,6 +113,42 @@ Every session starts by loading these files:
 3. **Prune TOOLS.md** -- Remove servers/services you don't actively use.
 4. **Don't duplicate rules** -- Global `~/.claude/rules/*.md` apply to all agents. Don't repeat in per-agent rules.
 
+## Output Compression: Terse Mode
+
+The single biggest hidden cost is **output tokens** -- verbose responses eat 3-5x more than necessary. Add this to CLAUDE.md or rules.md to cut output tokens by up to 75%:
+
+```markdown
+## Output style
+Drop: articles (a/an/the), filler (just/really/basically/actually/simply),
+pleasantries (sure/certainly/of course/happy to), hedging.
+Fragments OK. Short synonyms (big not extensive, fix not "implement a solution for").
+Technical terms exact. Code blocks unchanged. Errors quoted exact.
+
+Pattern: [thing] [action] [reason]. [next step].
+```
+
+### Before vs After
+
+| Before | After | Savings |
+|--------|-------|---------|
+| "Sure! I'd be happy to help you with that. The issue you're experiencing is likely caused by a problem in the authentication middleware." | "Bug in auth middleware. Token expiry check uses `<` not `<=`. Fix:" | ~75% |
+| "I've successfully implemented the changes you requested. The function now correctly handles edge cases." | "Done. Edge cases handled." | ~80% |
+
+### Why it works
+
+- **Output tokens cost 5x more than input** (Opus: $15 input vs $75 output per 1M)
+- Shorter responses = faster streaming = less rate limit consumed
+- Agent still writes full code blocks and exact error messages -- only prose is compressed
+- On Max subscription: same quality, 3x faster responses
+
+### How aggressive to go
+
+| Level | Add to rules | Effect |
+|-------|-------------|--------|
+| **Light** | "Be concise. No filler." | ~30% reduction |
+| **Medium** | The full prompt above | ~60% reduction |
+| **Heavy** | Add: "Max 2 sentences per response unless code." | ~75% reduction |
+
 ## Beginner Mistakes to Avoid
 
 | Mistake | Why it's bad | Fix |
