@@ -192,6 +192,133 @@ Telegram
 │       └── ...                       # (11 base skills total)
 ```
 
+## Gateway Features
+
+The gateway handles much more than simple message routing. Full feature list:
+
+### Core Features
+
+| Feature | Description |
+|---------|-------------|
+| **Multi-bot polling** | One process polls all bot tokens in parallel threads |
+| **Session management** | `--resume` for context continuity, `--resume` for context continuity, `/reset` for fresh start |
+| **Voice transcription** | Auto-transcribe `.ogg` via Groq Whisper before passing to agent |
+| **Source classification** | Tags every message: `own_text`, `own_voice`, `forwarded`, `external_media` |
+| **HOT memory write** | Appends every interaction to `core/hot/recent.md` (file-locked) |
+| **OpenViking push** | Background push to semantic memory with anti-pollution guards |
+| **Emergency trim** | Auto-trims HOT when >20KB (keeps last 600 lines) |
+| **Media download** | Photos, documents, stickers -- downloaded to `media-inbound/` |
+
+### Advanced Features
+
+| Feature | Description | Config |
+|---------|-------------|--------|
+| **Forward context** | Agent sees `[Forwarded from: Name]` prefix on forwarded messages | Automatic |
+| **Ack reactions** | Eyes emoji reaction on every incoming message (instant feedback) | Automatic |
+| **Inline buttons** | Send messages with clickable buttons, handle callbacks | `send_message_with_buttons()`, `register_callback_handler()` |
+| **Sticker cache** | File-based cache (`state/sticker-cache.json`) for sticker descriptions | Automatic |
+| **Webhook API** | HTTP endpoint for external integrations to inject messages | `webhook_port`, `webhook_token` in config |
+| **Per-topic routing** | Route Telegram forum topics to specific agents | `topic_routing` per agent |
+| **Streaming modes** | `partial` (edit-in-place) or `off` (single response) | `streaming_mode` per agent |
+| **Smart text chunking** | Split long responses by `\n` before hard split at 4000 chars | Automatic |
+| **Reply safety** | `allow_sending_without_reply` prevents errors on deleted messages | Automatic |
+| **Callback queries** | Prefix-based handler dispatch for inline button clicks | `dispatch_callback_query()` |
+
+### Forward Context
+
+When operator forwards a message, the agent sees who it was from:
+
+```
+# What the agent receives:
+[Forwarded from: John Doe]
+Original message text here
+
+# What OpenViking stores (with anti-pollution guard):
+[source:forwarded | forwarded from: john doe]
+[extraction hint: this content was FORWARDED... Do NOT extract as user's own preferences]
+Original message text here
+```
+
+### Webhook API
+
+External services can inject messages into agent queues:
+
+```bash
+curl -X POST http://localhost:8095/hooks/jarvis \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Alert: CPU usage above 90%"}'
+```
+
+Configure in `config.json`:
+```json
+{
+  "webhook_port": 8095,
+  "webhook_token": "YOUR_SECRET_TOKEN"
+}
+```
+
+### Per-Topic Routing
+
+Route Telegram forum (group with topics) threads to specific agents:
+
+```json
+{
+  "name": "jarvis",
+  "topic_routing": {
+    "-1001234567890": {
+      "42": "jarvis",
+      "43": "homer"
+    }
+  }
+}
+```
+
+Messages in topic 42 go to Jarvis, topic 43 to Homer. Messages outside configured topics are ignored.
+
+### Streaming Modes
+
+| Mode | Behavior | Use case |
+|------|----------|----------|
+| `partial` (default) | Edit message in real-time as agent responds | Interactive agents |
+| `off` | Single message after full response | Inbox agents, batch processing |
+
+```json
+{
+  "name": "edith",
+  "streaming_mode": "off"
+}
+```
+
+### Extended config.json
+
+```json
+{
+  "webhook_port": 8095,
+  "webhook_token": "YOUR_SECRET_TOKEN",
+  "agents": [
+    {
+      "name": "jarvis",
+      "bot_token_env": "TG_TOKEN_JARVIS",
+      "workspace": "~/.claude-lab/jarvis/.claude",
+      "model": "opus",
+      "role": "coordinator",
+      "streaming_mode": "partial",
+      "agent_names": ["jarvis", "homer", "edith"],
+      "topic_routing": {}
+    },
+    {
+      "name": "edith",
+      "bot_token_env": "TG_TOKEN_EDITH",
+      "workspace": "~/.claude-lab/edith/.claude",
+      "model": "sonnet",
+      "role": "inbox",
+      "streaming_mode": "off"
+    }
+  ]
+}
+```
+
 ## Key Design Decisions
 
 ### 1. Vibe Kanban -- local task board for all agents
