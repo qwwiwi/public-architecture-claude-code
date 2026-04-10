@@ -23,6 +23,7 @@ Universal architecture for Claude Code agents with local memory layers and seman
 | [FILES-REFERENCE.md](FILES-REFERENCE.md) | Полная карта каждого файла: роль, кто пишет, когда грузится |
 | [STRUCTURE.md](STRUCTURE.md) | Directory layout (single or multi-agent) |
 | [MEMORY.md](MEMORY.md) | 4-layer memory system with token budget |
+| [LEARNINGS.md](LEARNINGS.md) | Self-improvement: learnings feedback loop (by Karpathy method) |
 | [CHECKLIST.md](CHECKLIST.md) | Step-by-step: create a new agent from scratch |
 
 ### Reference

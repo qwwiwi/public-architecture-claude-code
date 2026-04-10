@@ -1,4 +1,18 @@
 # LEARNINGS -- {{AGENT_NAME}}
 
-_Lessons from mistakes. NOT loaded into session context. Access via Read tool._
-_Format: context, what went wrong, correct approach, rule._
+_Structured log of lessons learned. Append new entries at the bottom._
+_Review at session start. Metric: Repeats column. >0 = rule not working._
+
+## Triggers
+
+| Trigger | Action |
+|---------|--------|
+| Operator corrects | Record learning |
+| Error pattern (2+ times) | Strengthen rule |
+| New tool/skill | Update TOOLS.md |
+| Self-diagnosis (crash/timeout) | Record with root cause |
+
+## Log
+
+| # | Date | Type | Context | Error | Rule | Repeats | Applied to | Commit |
+|---|------|------|---------|-------|------|---------|------------|--------|

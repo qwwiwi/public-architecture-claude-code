@@ -68,3 +68,26 @@ Do NOT assume. Do NOT redirect without operator.
 | {{AGENT_1_NAME}} | {{AGENT_1_ROLE}} | {{AGENT_1_CHANNEL}} |
 | {{AGENT_2_NAME}} | {{AGENT_2_ROLE}} | {{AGENT_2_CHANNEL}} |
 | {{AGENT_3_NAME}} | {{AGENT_3_ROLE}} | {{AGENT_3_CHANNEL}} |
+
+## Self-Learning
+
+Local-only learning system. See [LEARNINGS.md](../LEARNINGS.md) for full documentation.
+
+### Access Zones
+
+| Zone | Files | Who changes |
+|------|-------|------------|
+| **RED (read-only)** | CLAUDE.md, rules.md, USER.md | Operator only |
+| **YELLOW (self-edit)** | AGENTS.md, TOOLS.md, warm/, hot/ | Agent on trigger |
+| **GREEN (autonomy)** | LEARNINGS.md, skills/*, feedback_*.md | Agent freely |
+
+### Flow
+
+1. Event -> classify type (tool / behavior / workflow / architecture)
+2. Record in core/LEARNINGS.md (structured log)
+3. Record in auto-memory feedback_*.md if behavioral
+4. If stable pattern -> update YELLOW zone
+
+### Metric
+
+Repeats column in LEARNINGS.md -- recurrence counter. >0 = rule not working, strengthen.
