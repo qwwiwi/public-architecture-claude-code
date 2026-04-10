@@ -52,7 +52,7 @@
 - Written by: Gateway process (auto-write after each interaction)
 - Trim: cron job removes entries older than 24h
 - Always in context via @include
-- WARNING: can grow to 80KB+ and consume 70%+ of startup tokens
+- WARNING: without cron, can grow to 80KB+ before trimming. After cron runs, typical size is 8-30 KB
 
 ### HOT Format
 
@@ -227,17 +227,62 @@ Script logic (pure bash, no model):
 # 3. Compress WARM: Sonnet re-compression by topic (>10KB only)
 0 6 * * * /path/to/compress-warm.sh
 
-# 4. Archive COLD: MEMORY.md >5KB -> archive/YYYY-MM.md (bash)
+# 4. Sync to OpenViking: HOT+WARM -> semantic search (bash + curl)
+30 6 * * * /path/to/ov-session-sync.sh
+
+# 5. Archive COLD: MEMORY.md >5KB -> archive/YYYY-MM.md (bash)
 0 21 * * * /path/to/memory-rotate.sh
 ```
 
-Order matters: rotate-warm first (clears old WARM entries), then trim-hot (adds new entries to WARM), then compress-warm (re-compresses if WARM grew too large).
+Order matters: rotate-warm first (clears old WARM entries), then trim-hot (adds new entries to WARM), then compress-warm (re-compresses if WARM grew too large), then ov-session-sync (uploads compressed state to OpenViking).
 
 ## OpenViking: Triggers and Data Flow
 
-### When data is pushed
+OpenViking data is synced via two mechanisms: **batch sync** (recommended) and **real-time push** (optional).
 
-Gateway pushes to OpenViking after **every message** where:
+### Method 1: Batch sync via cron + Stop hook (recommended)
+
+A shell script (`ov-session-sync.sh`) collects HOT + WARM memory and uploads to OpenViking as a single resource. Runs on two triggers:
+
+| Trigger | When | How |
+|---------|------|-----|
+| **Cron** | Daily at 06:30 UTC (after memory rotation) | `30 6 * * * bash scripts/ov-session-sync.sh` |
+| **Stop hook** | Every time Claude Code finishes responding | `settings.json` → `hooks.Stop` |
+
+**What the script does:**
+
+```
+1. Health check → OpenViking reachable?
+2. Build markdown summary from HOT (last 10 entries) + WARM (full)
+3. POST /api/v1/resources/temp_upload → upload markdown as temp file
+4. POST /api/v1/resources → add_resource with target URI + wait=true
+5. OpenViking indexes content, creates embeddings automatically
+```
+
+**Target URI pattern:** `viking://resources/{agent}-sessions/{YYYY-MM-DD}`
+
+**Stop hook configuration** (in `~/.claude/settings.json`):
+
+```json
+{
+  "hooks": {
+    "Stop": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "bash scripts/ov-session-sync.sh >> /tmp/ov-session-sync.log 2>&1 &",
+        "timeout": 10
+      }]
+    }]
+  }
+}
+```
+
+**Why batch sync over real-time:** Simpler, no threading issues, no session lifecycle to manage. HOT+WARM already contain compressed context — uploading once per session (or daily) is sufficient for semantic search.
+
+### Method 2: Real-time push from gateway (optional)
+
+Gateway can push to OpenViking after **every message** where:
 
 | Source tag | Pushed to OV? | Reason |
 |------------|---------------|--------|
@@ -247,34 +292,19 @@ Gateway pushes to OpenViking after **every message** where:
 | `external_media` | No | Media only goes to HOT, not OV (avoids pollution) |
 | transcription failed | No | Broken audio — skip to avoid garbage |
 
-### What is sent
-
-```
-POST /api/v1/sessions                          → create session
-POST /api/v1/sessions/{sid}/messages           → user message (max 3000 chars)
-POST /api/v1/sessions/{sid}/messages           → agent response (max 3000 chars)
-POST /api/v1/sessions/{sid}/extract            → trigger LLM extraction
-DELETE /api/v1/sessions/{sid}                  → cleanup
-```
-
-Each message includes metadata prefix: `[chat:{id} agent:{name} at {timestamp}]`
-
-### Anti-pollution guards
-
-For forwarded and external content, OV receives extraction hints:
+**Anti-pollution guards** for forwarded content:
 
 - **Forwarded:** `[extraction hint: this content was FORWARDED ... Do NOT extract as user's own preferences]`
 - **External media:** `[extraction hint: this is external media ... Do NOT extract as user's preferences]`
 
-### What OpenViking extracts
+**Threading model:**
+- Push runs in a **bounded ThreadPoolExecutor** (max 2 workers)
+- Fire-and-forget: does not block message response
 
-OpenViking runs its own LLM on the session to extract structured memories:
-- User preferences and decisions
-- Named entities (tools, projects, people)
-- Action items and commitments
-- Patterns and recurring topics
+### Searching OpenViking
 
-These are stored as embeddings and searchable via:
+Both methods produce embeddings searchable via the same API:
+
 ```bash
 curl -X POST "http://localhost:1933/api/v1/search/find" \
   -H "X-API-Key: $KEY" \
@@ -283,11 +313,7 @@ curl -X POST "http://localhost:1933/api/v1/search/find" \
   -d '{"query": "topic", "limit": 10}'
 ```
 
-### Threading model
-
-- Push runs in a **bounded ThreadPoolExecutor** (max 2 workers)
-- Fire-and-forget: does not block message response
-- Session is always cleaned up in `finally` block (prevents leaks)
+**Note:** `localhost:1933` is the default. For multi-VPS setups, use the Tailscale IP of the server running OpenViking (e.g., `100.x.x.x:1933`).
 
 ## Data Priority
 

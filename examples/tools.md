@@ -23,7 +23,7 @@
 
 ## OpenViking
 
-- URL: http://127.0.0.1:1933
+- URL: http://localhost:1933
 - Account: myproject
 - Key: ~/.claude-lab/shared/secrets/openviking.key
 

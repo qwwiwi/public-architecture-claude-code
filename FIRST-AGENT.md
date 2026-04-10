@@ -90,9 +90,10 @@ Create `~/.claude-lab/reviewer/.claude/core/AGENTS.md`:
 
 ## OpenViking (optional)
 
-- URL: http://127.0.0.1:1933
+- URL: http://localhost:1933 (use Tailscale IP for multi-VPS: check `ss -tlnp | grep 1933`)
 - Key: ~/.claude-lab/shared/secrets/openviking.key
 - Search: POST /api/v1/search/find
+- Sync: Stop hook + cron via ov-session-sync.sh (see MEMORY.md)
 ```
 
 ## Step 4: Write USER.md

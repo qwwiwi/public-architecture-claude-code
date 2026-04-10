@@ -282,6 +282,25 @@ Replace `npx prettier --write` with your formatter: `black` (Python), `gofmt` (G
 
 Creates atomic commits after each Claude response. Combine with `claude -w feature-branch` (worktrees) for isolated auto-committed feature branches.
 
+### Sync session to OpenViking on Stop
+
+```json
+{
+  "hooks": {
+    "Stop": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "bash scripts/ov-session-sync.sh >> /tmp/ov-session-sync.log 2>&1 &",
+        "timeout": 10
+      }]
+    }]
+  }
+}
+```
+
+Uploads HOT+WARM memory to OpenViking for semantic search across sessions. The script (`ov-session-sync.sh`) uses `temp_upload` + `add_resource` to create indexed resources at `viking://resources/{agent}-sessions/{date}`. Runs in background (`&`) so it doesn't block the session exit. Combine with a daily cron (`30 6 * * *`) for redundancy. See MEMORY.md for full details.
+
 ### Inject context on session start
 
 ```json

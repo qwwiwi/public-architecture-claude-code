@@ -207,12 +207,13 @@ cd ~/.claude-lab/homer/.claude
    30 4 * * * ~/.claude-lab/homer/.claude/scripts/rotate-warm.sh
    0 5 * * * ~/.claude-lab/homer/.claude/scripts/trim-hot.sh
    0 6 * * * ~/.claude-lab/homer/.claude/scripts/compress-warm.sh
+   30 6 * * * ~/.claude-lab/homer/.claude/scripts/ov-session-sync.sh
    0 21 * * * ~/.claude-lab/homer/.claude/scripts/memory-rotate.sh
 
 ВАЖНО: Без этих скриптов hot/recent.md вырастет до 80KB+ за день
 и займёт 70% контекстного окна. Cron -- обязательно.
 
-Покажи: crontab -l | grep -E "trim|rotate|compress"
+Покажи: crontab -l | grep -E "trim|rotate|compress|ov-session"
 ```
 
 ---
@@ -303,7 +304,7 @@ https://github.com/qwwiwi/jarvis-telegram-gateway
 3. ls ~/.claude-lab/shared/skills/ -- 11 скиллов?
 4. cat ~/.claude/CLAUDE.md -- глобальные правила?
 5. cat ~/.claude/rules/*.md -- языковые конвенции?
-6. crontab -l | grep -E "trim|rotate|compress" -- 4 cron-задачи?
+6. crontab -l | grep -E "trim|rotate|compress|ov-session" -- 5 cron-задач?
 7. claude plugins list -- Superpowers установлен?
 8. gh auth status -- GitHub авторизован?
 9. npx vibe-kanban --help -- Vibe Kanban доступен?

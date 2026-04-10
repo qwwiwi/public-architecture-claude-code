@@ -231,9 +231,9 @@ All agents push to and search from one OpenViking instance. Replaces file-based 
 
 ```
 OLD: File mirrors          →  NEW: OpenViking
-shared/state/tasks.json         POST /sessions/{sid}/messages
-shared/state/agents.json        (auto-extracted to semantic index)
-mirrors/sync-cron.sh            curl /search/find {query}
+shared/state/tasks.json         temp_upload + add_resource
+shared/state/agents.json        (auto-indexed to semantic store)
+mirrors/sync-cron.sh            ov-session-sync.sh (cron + Stop hook)
 ```
 
 ### Namespacing
@@ -243,14 +243,23 @@ Each agent writes under its own user namespace but can search across all:
 ```bash
 OV_KEY=$(cat ~/.claude-lab/shared/secrets/openviking.key)
 
-# Agent writes to its own namespace
-curl -X POST "http://127.0.0.1:1933/api/v1/sessions" \
+# Agent syncs sessions to its own namespace (via ov-session-sync.sh or manual)
+# Step 1: upload markdown
+curl -X POST "http://localhost:1933/api/v1/resources/temp_upload" \
   -H "X-API-Key: $OV_KEY" \
   -H "X-OpenViking-Account: my-team" \
-  -H "X-OpenViking-User: jarvis"       # ← namespace per agent
+  -H "X-OpenViking-User: jarvis" \
+  -F "file=@session-summary.md"
+# Step 2: add resource (returns after indexing)
+curl -X POST "http://localhost:1933/api/v1/resources" \
+  -H "X-API-Key: $OV_KEY" \
+  -H "X-OpenViking-Account: my-team" \
+  -H "X-OpenViking-User: jarvis" \
+  -H "Content-Type: application/json" \
+  -d '{"temp_file_id":"<from step 1>","to":"viking://resources/jarvis-sessions/2026-04-10","wait":true}'
 
 # Any agent can search across ALL namespaces
-curl -X POST "http://127.0.0.1:1933/api/v1/search/find" \
+curl -X POST "http://localhost:1933/api/v1/search/find" \
   -H "X-API-Key: $OV_KEY" \
   -H "X-OpenViking-Account: my-team" \
   -H "X-OpenViking-User: jarvis" \

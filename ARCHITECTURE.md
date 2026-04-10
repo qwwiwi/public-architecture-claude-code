@@ -60,7 +60,7 @@ Checkpoints are created on every Claude action and persist across sessions.
 ```
 COLD memory    → Read tool (MEMORY.md, LEARNINGS.md)
 Skills         → Skill tool (shared/skills/)
-OpenViking L4  → curl localhost:1933
+OpenViking L4  → curl localhost:1933 (or Tailscale IP for multi-VPS)
 Web search     → Perplexity / DuckDuckGo
 ```
 
@@ -97,13 +97,12 @@ MEMORY WRITE (parallel, after every message)
     |    - Snippet: 200 chars user + 200 chars agent
     |    - Emergency trim: if >20KB, keep last 600 lines
     |
-    | B. OpenViking: push to localhost:1933 (FILTERED by source tag)
-    |    - own_text: YES (extract preferences, decisions)
-    |    - own_voice: YES (extract preferences, decisions)
-    |    - forwarded: YES (with anti-pollution guard)
-    |    - external_media: NO (avoids preference pollution)
-    |    - transcription_failed: NO (avoids garbage)
-    |    - Fire-and-forget: 2-thread pool, non-blocking
+    | B. OpenViking: synced via Stop hook + daily cron (NOT per-message)
+    |    - Stop hook: runs ov-session-sync.sh on session end (background)
+    |    - Cron: 06:30 UTC daily (after memory rotation scripts)
+    |    - Uploads HOT (last 10 entries) + WARM (full) as markdown
+    |    - Method: temp_upload -> add_resource to viking://resources/
+    |    - Idempotent: same date = same URI = overwrites previous
     |
     v
 REPLY to operator in Telegram (markdown -> HTML, chunked at 4000 chars)
@@ -113,7 +112,7 @@ This is the critical path. Every message follows this exact sequence. Memory wri
 
 ## Why Memory Compression Matters
 
-Without compression, HOT memory grows to 80KB+ per day. At 150+ messages per day with ~500 bytes each, this is expected. The problem: 80KB of raw conversation logs equals ~36,000 tokens -- roughly 70% of the total startup context at Opus level.
+Without compression, HOT memory grows to 80KB+ per day (before cron runs). After daily cron rotation, HOT is typically 8-20KB. At 150+ messages per day with ~500 bytes each, this is expected. The problem: 80KB of raw conversation logs equals ~36,000 tokens -- roughly 70% of the total startup context at Opus level.
 
 Quality degrades when context is bloated with raw logs. The agent spends most of its attention on unstructured conversation history instead of identity, rules, and tools. This is measurable -- an agent with 80KB of raw HOT performs noticeably worse at following instructions than one with 20KB of structured facts.
 
@@ -143,7 +142,7 @@ Gateway (systemd service)
     │ 5. Launch Claude Code (claude -p --resume <session_id>)
     │ 6. Stream progress (real-time status in Telegram: plan, tools, subagents)
     │ 7. Write to HOT (core/hot/recent.md — fcntl lock, 200 char snippets)
-    │ 8. Push to OpenViking (fire-and-forget, 2-thread pool — own_text/voice/forwarded only)
+    │ 8. Write to HOT completes (OpenViking synced separately via Stop hook + cron)
     │ 9. Reply in Telegram (markdown → HTML, chunked at 4000 chars)
     ▼
 Claude Code (model)
@@ -166,23 +165,20 @@ Agent B → shared/messages/inbox/{agent-a}
 [OpenViking](https://github.com/volcengine/OpenViking) -- open-source context database for AI agents. Manages memories, resources, and skills through a filesystem paradigm with tiered context loading.
 
 ```
-localhost:1933
+localhost:1933 (or Tailscale IP — check ss -tlnp | grep 1933)
 │
 ├── Account: {org}
 │   ├── User: claude-code    (own embeddings)
 │   └── User: jarvis         (own embeddings)
 │
-├── Write: after EVERY message (gateway auto-push)
-│   POST /api/v1/sessions           → create
-│   POST /api/v1/sessions/{id}/messages  → user + agent msgs (max 3000 chars each)
-│   POST /api/v1/sessions/{id}/extract   → LLM extracts structured memories
-│   DELETE /api/v1/sessions/{id}         → cleanup
-│
-├── What triggers push:
-│   own_text     → yes (extract preferences, decisions)
-│   own_voice    → yes (after Groq transcription)
-│   forwarded    → yes (with anti-pollution guard)
-│   external_media → NO (hot only, avoids preference pollution)
+├── Write: batch sync (NOT per-message)
+│   Trigger 1: Stop hook (runs ov-session-sync.sh on session end)
+│   Trigger 2: Cron 06:30 UTC daily (after memory rotation)
+│   Method:
+│     POST /api/v1/resources/temp_upload     → upload markdown
+│     POST /api/v1/resources                 → add_resource (indexes + embeds)
+│   Target: viking://resources/{agent}-sessions/{YYYY-MM-DD}
+│   Content: last 10 HOT entries + full WARM decisions
 │
 └── Search: when old context needed (>24h)
     POST /api/v1/search/find
@@ -226,7 +222,8 @@ Gateway (every message) -> HOT (recent.md)
   +-- /reset command (manual, Sonnet)
         Save important context to COLD, start new session
 
-L4     -> OpenViking, fire-and-forget after every message, forever
+L4     -> OpenViking, batch sync via Stop hook + daily cron (06:30 UTC)
+         Method: temp_upload + add_resource to viking://resources/
 ```
 
 ### Recommended crontab
@@ -241,11 +238,14 @@ L4     -> OpenViking, fire-and-forget after every message, forever
 # 3. Compress WARM: Sonnet re-compression by topic (>10KB only)
 0 6 * * * /path/to/compress-warm.sh
 
-# 4. Archive COLD: MEMORY.md >5KB -> archive/YYYY-MM.md (bash)
+# 4. Sync to OpenViking: HOT+WARM -> semantic search (bash + curl)
+30 6 * * * /path/to/ov-session-sync.sh
+
+# 5. Archive COLD: MEMORY.md >5KB -> archive/YYYY-MM.md (bash)
 0 21 * * * /path/to/memory-rotate.sh
 ```
 
-Order: rotate-warm (clear old) -> trim-hot (add new to WARM) -> compress-warm (re-compress if needed).
+Order: rotate-warm (clear old) -> trim-hot (add new to WARM) -> compress-warm (re-compress) -> ov-session-sync (upload to L4).
 
 ### Gateway commands for memory
 
