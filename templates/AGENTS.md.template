@@ -77,9 +77,9 @@ Local-only learning system. See [LEARNINGS.md](../LEARNINGS.md) for full documen
 
 | Zone | Files | Who changes |
 |------|-------|------------|
-| **RED (read-only)** | CLAUDE.md, rules.md, USER.md | Operator only |
-| **YELLOW (self-edit)** | AGENTS.md, TOOLS.md, warm/, hot/ | Agent on trigger |
-| **GREEN (autonomy)** | LEARNINGS.md, skills/*, feedback_*.md | Agent freely |
+| **RED (read-only)** | CLAUDE.md, rules.md | Operator only |
+| **YELLOW (self-edit)** | USER.md, AGENTS.md, TOOLS.md, warm/, hot/ | Agent on trigger |
+| **GREEN (autonomy)** | LEARNINGS.md, MEMORY.md, skills/*, feedback_*.md | Agent freely |
 
 ### Flow
 

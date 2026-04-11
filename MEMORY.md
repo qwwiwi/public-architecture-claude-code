@@ -34,7 +34,7 @@
 |------|---------|-----------|
 | CLAUDE.md | SOUL, character, workflow | Manual only |
 | AGENTS.md | Models, subagents, pipelines | Manual only |
-| USER.md | Operator profile | Manual only |
+| USER.md | Operator profile | Agent on trigger (YELLOW) |
 | rules.md | Boundaries, permissions | Manual only |
 | TOOLS.md | Servers, Docker, services | Manual only |
 

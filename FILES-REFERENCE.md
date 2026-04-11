@@ -33,7 +33,7 @@ Per-agent identity. Loaded every session via `@include` directives in CLAUDE.md.
 |------|------|-------|--------|--------|
 | **CLAUDE.md** | SOUL -- agent character, personality, principles, priorities, workflow rules. Contains `@include` directives that pull in other files | always | operator (manual) | agent reads, only operator edits |
 | **core/AGENTS.md** | Operating rules: models, message bus paths, subagent config, cross-review rules, pipelines, analytics | always (@include) | operator (manual) | agent reads, only operator edits |
-| **core/USER.md** | Operator profile: name, timezone, channels, products, communication style | always (@include) | operator (manual) | agent reads, only operator edits |
+| **core/USER.md** | Operator profile: name, timezone, channels, products, communication style | always (@include) | operator + agent (YELLOW) | agent updates with justification as operator evolves |
 | **core/rules.md** | Boundaries: what agent can/cannot do, red zones, security, git policy, Telegram rules | always (@include) | operator (manual) | agent reads, only operator edits |
 | **tools/TOOLS.md** | Infrastructure map: servers, SSH, Docker, systemd, ports, GitHub, secrets paths | always (@include) | operator (manual) or agent with permission | agent reads, agent can suggest edits |
 
