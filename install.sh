@@ -24,6 +24,15 @@ warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
 err()   { echo -e "${RED}[x]${NC} $1"; }
 ask()   { echo -en "${CYAN}[?]${NC} $1: "; }
 
+# Cross-platform sed in-place (macOS requires '' argument, Linux does not)
+sed_i() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
 # ============================================================
 # Step 1: Check prerequisites
 # ============================================================
@@ -189,26 +198,26 @@ fill_template() {
     cp "$src" "$dst"
 
     # Replace all placeholders
-    sed -i "s|{{AGENT_NAME}}|${AGENT_NAME}|g" "$dst"
-    sed -i "s|{{AGENT_ID}}|${AGENT_ID}|g" "$dst"
-    sed -i "s|{{AGENT_ROLE}}|${AGENT_ROLE}|g" "$dst"
-    sed -i "s|{{AGENT_ROLE_DESCRIPTION}}|${AGENT_ROLE_DESCRIPTION}|g" "$dst"
-    sed -i "s|{{CHARACTER_TRAITS}}|${CHARACTER_TRAITS}|g" "$dst"
-    sed -i "s|{{PRIMARY_MODEL}}|${PRIMARY_MODEL}|g" "$dst"
-    sed -i "s|{{RESEARCH_MODEL}}|${RESEARCH_MODEL}|g" "$dst"
-    sed -i "s|{{MAX_SUBAGENTS}}|${MAX_SUBAGENTS}|g" "$dst"
-    sed -i "s|{{OPERATOR_NAME}}|${OPERATOR_NAME}|g" "$dst"
-    sed -i "s|{{OPERATOR_ADDRESS}}|${OPERATOR_ADDRESS}|g" "$dst"
-    sed -i "s|{{TIMEZONE}}|${TIMEZONE}|g" "$dst"
-    sed -i "s|{{LANGUAGE}}|${LANGUAGE}|g" "$dst"
-    sed -i "s|{{COMMIT_LANGUAGE}}|${COMMIT_LANGUAGE}|g" "$dst"
-    sed -i "s|{{BUDGET_LIMIT}}|${BUDGET_LIMIT}|g" "$dst"
-    sed -i "s|{{GITHUB_USERNAME}}|${GITHUB_USERNAME}|g" "$dst"
-    sed -i "s|{{OPENVIKING_ACCOUNT}}|${OPENVIKING_ACCOUNT}|g" "$dst"
-    sed -i "s|{{INSTALL_DATE}}|$(date -u +%Y-%m-%d)|g" "$dst"
+    sed_i "s|{{AGENT_NAME}}|${AGENT_NAME}|g" "$dst"
+    sed_i "s|{{AGENT_ID}}|${AGENT_ID}|g" "$dst"
+    sed_i "s|{{AGENT_ROLE}}|${AGENT_ROLE}|g" "$dst"
+    sed_i "s|{{AGENT_ROLE_DESCRIPTION}}|${AGENT_ROLE_DESCRIPTION}|g" "$dst"
+    sed_i "s|{{CHARACTER_TRAITS}}|${CHARACTER_TRAITS}|g" "$dst"
+    sed_i "s|{{PRIMARY_MODEL}}|${PRIMARY_MODEL}|g" "$dst"
+    sed_i "s|{{RESEARCH_MODEL}}|${RESEARCH_MODEL}|g" "$dst"
+    sed_i "s|{{MAX_SUBAGENTS}}|${MAX_SUBAGENTS}|g" "$dst"
+    sed_i "s|{{OPERATOR_NAME}}|${OPERATOR_NAME}|g" "$dst"
+    sed_i "s|{{OPERATOR_ADDRESS}}|${OPERATOR_ADDRESS}|g" "$dst"
+    sed_i "s|{{TIMEZONE}}|${TIMEZONE}|g" "$dst"
+    sed_i "s|{{LANGUAGE}}|${LANGUAGE}|g" "$dst"
+    sed_i "s|{{COMMIT_LANGUAGE}}|${COMMIT_LANGUAGE}|g" "$dst"
+    sed_i "s|{{BUDGET_LIMIT}}|${BUDGET_LIMIT}|g" "$dst"
+    sed_i "s|{{GITHUB_USERNAME}}|${GITHUB_USERNAME}|g" "$dst"
+    sed_i "s|{{OPENVIKING_ACCOUNT}}|${OPENVIKING_ACCOUNT}|g" "$dst"
+    sed_i "s|{{INSTALL_DATE}}|$(date -u +%Y-%m-%d)|g" "$dst"
 
     # Clean remaining placeholders (team, channels, etc.)
-    sed -i 's|{{[A-Z_0-9]*}}|TODO: fill in|g' "$dst"
+    sed_i 's|{{[A-Z_0-9]*}}|TODO: fill in|g' "$dst"
 
     log "Created: $dst"
 }
@@ -235,6 +244,61 @@ fill_template "${TEMPLATES_DIR}/global-CLAUDE.md.template" "${GLOBAL_DIR}/CLAUDE
 if [ ! -f "${WORKSPACE}/settings.json" ]; then
     cp "${TEMPLATES_DIR}/settings.json.template" "${WORKSPACE}/settings.json"
     log "Created: ${WORKSPACE}/settings.json"
+fi
+
+# ============================================================
+# Step 5.5: Learnings repo (self-improvement system)
+# ============================================================
+
+LEARNINGS_DIR="${HOME}/projects/learnings"
+
+ask "Set up Learnings repo? (git-based self-improvement) [Y/n]"
+read -r SETUP_LEARNINGS
+
+if [[ "${SETUP_LEARNINGS,,}" != "n" ]]; then
+    if [ ! -d "${LEARNINGS_DIR}" ]; then
+        ask "Learnings repo URL (e.g. github.com/you/learnings, or skip)"
+        read -r LEARNINGS_REPO_URL
+        if [[ -n "${LEARNINGS_REPO_URL}" && "${LEARNINGS_REPO_URL}" != "skip" ]]; then
+            log "Cloning learnings repo..."
+            git clone "https://${LEARNINGS_REPO_URL}.git" "${LEARNINGS_DIR}" 2>/dev/null || \
+            gh repo clone "${LEARNINGS_REPO_URL}" "${LEARNINGS_DIR}" 2>/dev/null || \
+            warn "Could not clone learnings repo. Set up manually later."
+        else
+            log "Creating local learnings repo..."
+            mkdir -p "${LEARNINGS_DIR}/${AGENT_ID}"
+            cd "${LEARNINGS_DIR}"
+            git init
+            cp "${TEMPLATES_DIR}/LEARNINGS.md.template" "${AGENT_ID}/LEARNINGS.md"
+            sed_i "s|{Agent Name}|${AGENT_NAME}|g" "${AGENT_ID}/LEARNINGS.md"
+            git add . && git commit -m "Initial learnings setup for ${AGENT_ID}"
+        fi
+    else
+        log "Learnings repo exists: ${LEARNINGS_DIR}"
+    fi
+
+    # Create/checkout agent branch
+    if [ -d "${LEARNINGS_DIR}/.git" ]; then
+        cd "${LEARNINGS_DIR}"
+        BRANCH="${AGENT_ID}/learnings"
+        if git show-ref --verify --quiet "refs/heads/${BRANCH}" 2>/dev/null || \
+           git show-ref --verify --quiet "refs/remotes/origin/${BRANCH}" 2>/dev/null; then
+            git checkout "${BRANCH}" 2>/dev/null || git checkout -b "${BRANCH}" "origin/${BRANCH}" 2>/dev/null
+            log "Checked out branch: ${BRANCH}"
+        else
+            git checkout -b "${BRANCH}" 2>/dev/null
+            log "Created branch: ${BRANCH}"
+        fi
+        cd - >/dev/null
+    fi
+
+    # Ensure agent LEARNINGS.md exists in repo
+    if [ ! -f "${LEARNINGS_DIR}/${AGENT_ID}/LEARNINGS.md" ]; then
+        mkdir -p "${LEARNINGS_DIR}/${AGENT_ID}"
+        cp "${TEMPLATES_DIR}/LEARNINGS.md.template" "${LEARNINGS_DIR}/${AGENT_ID}/LEARNINGS.md"
+        sed_i "s|{Agent Name}|${AGENT_NAME}|g" "${LEARNINGS_DIR}/${AGENT_ID}/LEARNINGS.md"
+        log "Created: ${LEARNINGS_DIR}/${AGENT_ID}/LEARNINGS.md"
+    fi
 fi
 
 # ============================================================
@@ -283,6 +347,38 @@ for skill in $SKILL_LIST; do
         warn "Skill not found in repo: ${skill}"
     fi
 done
+
+# ============================================================
+# Step 7.5: Gateway setup (Telegram integration)
+# ============================================================
+
+GATEWAY_DIR="${SHARED}/gateway"
+
+ask "Set up Telegram gateway? [Y/n]"
+read -r SETUP_GATEWAY
+
+if [[ "${SETUP_GATEWAY,,}" != "n" ]]; then
+    if [ ! -f "${GATEWAY_DIR}/gateway.py" ]; then
+        log "Downloading gateway from jarvis-telegram-gateway..."
+        GATEWAY_REPO="/tmp/jarvis-gateway-install-$$"
+        gh repo clone qwwiwi/jarvis-telegram-gateway "${GATEWAY_REPO}" 2>/dev/null || \
+        git clone "https://github.com/qwwiwi/jarvis-telegram-gateway.git" "${GATEWAY_REPO}" 2>/dev/null
+
+        if [ -f "${GATEWAY_REPO}/gateway.py" ]; then
+            cp "${GATEWAY_REPO}/gateway.py" "${GATEWAY_DIR}/gateway.py"
+            cp "${GATEWAY_REPO}/config.example.json" "${GATEWAY_DIR}/config.example.json"
+            cp "${GATEWAY_REPO}/requirements.txt" "${GATEWAY_DIR}/requirements.txt"
+            log "Gateway installed: ${GATEWAY_DIR}/gateway.py"
+            log "Configure: cp ${GATEWAY_DIR}/config.example.json ${GATEWAY_DIR}/config.json"
+            log "Features: reactions, inline buttons, webhook API, topic routing, streaming modes"
+        else
+            warn "Could not download gateway. Install manually from: github.com/qwwiwi/jarvis-telegram-gateway"
+        fi
+        rm -rf "${GATEWAY_REPO}"
+    else
+        log "Gateway exists: ${GATEWAY_DIR}/gateway.py"
+    fi
+fi
 
 # ============================================================
 # Step 8: Create symlinks
@@ -407,6 +503,18 @@ echo "       0 21 * * * bash ${WORKSPACE}/scripts/memory-rotate.sh"
 echo ""
 echo "    5. (Optional) Add more agents:"
 echo "       bash install.sh  (run again with different agent name)"
+echo ""
+echo "    6. (Optional) Set up Learnings self-improvement:"
+echo "       cd ~/projects/learnings"
+echo "       git checkout ${AGENT_ID}/learnings"
+echo "       # Record corrections in core/LEARNINGS.md"
+echo "       # Commit: git commit -m '[${AGENT_ID}] Learning #N: description'"
+echo ""
+echo "    7. (Optional) Set up Telegram gateway:"
+echo "       cp ${GATEWAY_DIR}/config.example.json ${GATEWAY_DIR}/config.json"
+echo "       # Edit config.json: add bot token, agent name, allowlist"
+echo "       python3 ${GATEWAY_DIR}/gateway.py"
+echo "       # Or set up as launchd/systemd service"
 echo ""
 echo "============================================"
 echo "  Done. Happy coding!"
