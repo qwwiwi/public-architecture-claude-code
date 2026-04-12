@@ -32,10 +32,12 @@ Per-agent identity. Loaded every session via `@include` directives in CLAUDE.md.
 | File | Role | Loads | Writer | Access |
 |------|------|-------|--------|--------|
 | **CLAUDE.md** | SOUL -- agent character, personality, principles, priorities, workflow rules. Contains `@include` directives that pull in other files | always | operator (manual) | agent reads, only operator edits |
-| **core/AGENTS.md** | Operating rules: models, message bus paths, subagent config, cross-review rules, pipelines, analytics | always (@include) | operator (manual) | agent reads, only operator edits |
+| **core/AGENTS.md** | Operating rules: models, message bus paths, subagent config, cross-review rules, pipelines, analytics | on-demand (Read tool) | operator (manual) | agent reads, only operator edits |
 | **core/USER.md** | Operator profile: name, timezone, channels, products, communication style | always (@include) | operator + agent (YELLOW) | agent updates with justification as operator evolves |
 | **core/rules.md** | Boundaries: what agent can/cannot do, red zones, security, git policy, Telegram rules | always (@include) | operator (manual) | agent reads, only operator edits |
-| **tools/TOOLS.md** | Infrastructure map: servers, SSH, Docker, systemd, ports, GitHub, secrets paths | always (@include) | operator (manual) or agent with permission | agent reads, agent can suggest edits |
+| **tools/TOOLS.md** | Infrastructure map: servers, SSH, Docker, systemd, ports, GitHub, secrets paths | on-demand (Read tool) | operator (manual) or agent with permission | agent reads, agent can suggest edits |
+
+**Note:** AGENTS.md and TOOLS.md are NOT included at startup to save tokens (~18KB). Agents load them on-demand via Read tool when needed.
 
 **Who can touch:** Operator only. These are the agent's constitution -- agent cannot self-modify identity.
 
@@ -65,7 +67,8 @@ Rolling 24h journal. Every conversation turn recorded. Loaded every session.
 
 | File | Role | Loads | Writer | Access |
 |------|------|-------|--------|--------|
-| **hot/recent.md** | Full conversation journal: timestamp, source tag, user snippet (200 chars), agent snippet (200 chars). Emergency trim at 20KB/600 lines | always (@include) | **gateway.py** (`append_to_hot_memory()` with fcntl lock), **trim-hot.sh** (cron, compresses old entries) | agent reads, gateway writes, cron trims |
+| **hot/handoff.md** | Compact extract from recent.md: last 10 conversation entries. Injected at session start for continuity without loading the full journal | always (@include) | **hook** (extracts last 10 from recent.md at session start) | agent reads, hook writes |
+| **hot/recent.md** | Full conversation journal: timestamp, source tag, user snippet (200 chars), agent snippet (200 chars). Emergency trim at 20KB/600 lines | on-demand (Read tool) | **gateway.py** (`append_to_hot_memory()` with fcntl lock), **trim-hot.sh** (cron, compresses old entries) | agent reads, gateway writes, cron trims |
 
 **Entry format:**
 ```
@@ -213,18 +216,19 @@ Telegram router. Shared across agents. NOT loaded into agent context.
 | ~/.claude/CLAUDE.md | 7 KB | 3,200 |
 | ~/.claude/rules/*.md | 1 KB | 430 |
 | CLAUDE.md (SOUL) | 8 KB | 3,500 |
-| core/AGENTS.md | 5 KB | 2,400 |
 | core/USER.md | 2 KB | 765 |
 | core/rules.md | 4 KB | 1,935 |
 | core/warm/decisions.md | 3 KB | 1,400 |
-| core/hot/recent.md | 8-30 KB | 3,600-13,500 |
-| tools/TOOLS.md | 6 KB | 2,565 |
-| **TOTAL** | **44-66 KB** | **19,800-29,700** |
+| core/hot/handoff.md | 1-4 KB | 450-1,800 |
+| **TOTAL** | **26-29 KB** | **11,680-13,030** |
 
 ### On-demand (not in startup context)
 
 | Resource | Size | When |
 |----------|------|------|
+| core/AGENTS.md | 5 KB | Agent needs models, subagents, pipelines (on-demand Read) |
+| tools/TOOLS.md | 6 KB | Agent needs servers, infrastructure (on-demand Read) |
+| core/hot/recent.md | 8-30 KB | Full journal, loaded by gateway (on-demand Read) |
 | MEMORY.md (COLD) | 5+ KB | Agent needs old decisions |
 | LEARNINGS.md | varies | Agent needs past mistakes |
 | Skills (15) | ~50 KB total | Skill tool invocation |

@@ -125,14 +125,15 @@ bash install.sh
 └── homer/.claude/               твой агент
     ├── CLAUDE.md                SOUL + @include (identity)
     ├── core/
-    │   ├── AGENTS.md            модели, субагенты
-    │   ├── USER.md              твой профиль
-    │   ├── rules.md             границы, запреты
-    │   ├── warm/decisions.md    решения (14 дней)
-    │   ├── hot/recent.md        журнал (24 часа)
+    │   ├── AGENTS.md            модели, субагенты (on-demand)
+    │   ├── USER.md              твой профиль (@include)
+    │   ├── rules.md             границы, запреты (@include)
+    │   ├── warm/decisions.md    решения, 14 дней (@include)
+    │   ├── hot/handoff.md       последние 10 записей (@include)
+    │   ├── hot/recent.md        полный журнал (24 часа)
     │   ├── MEMORY.md            архив
     │   └── LEARNINGS.md         уроки из ошибок
-    ├── tools/TOOLS.md           серверы, порты, Docker
+    ├── tools/TOOLS.md           серверы, порты, Docker (on-demand)
     ├── skills/ -> shared        скиллы (symlink)
     ├── agents/                  субагенты
     └── scripts/                 cron-скрипты памяти
@@ -329,7 +330,7 @@ https://github.com/qwwiwi/jarvis-telegram-gateway
 ## FAQ
 
 **Q: Сколько токенов занимает архитектура?**
-A: ~15,000-35,000 из 1,000,000 (2-4% окна Opus). Основной потребитель -- hot/recent.md. Cron скрипты держат его в пределах 10-20 KB.
+A: ~10,000-25,000 из 1,000,000 (1-3% окна Opus). CLAUDE.md загружает 4 файла через @include (USER.md, rules.md, decisions.md, handoff.md). AGENTS.md и TOOLS.md загружаются по запросу через Read tool, что экономит ~18KB. Cron скрипты держат hot/recent.md в пределах 10-20 KB.
 
 **Q: Можно без Opus?**
 A: Можно на Sonnet, но Opus лучше справляется с длинным контекстом и @includes.

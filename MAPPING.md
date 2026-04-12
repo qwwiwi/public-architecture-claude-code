@@ -8,9 +8,9 @@ How three systems name and use the same concepts. Use this to understand where e
 |---------|----------|----------------------|-----------------|-------|
 | Agent personality, values, tone | `SOUL.md` | `CLAUDE.md` | `CLAUDE.md` (SOUL section) | always |
 | Agent name, creature, avatar | `IDENTITY.md` | _(inside CLAUDE.md)_ | _(inside CLAUDE.md)_ | always |
-| Operating rules, models, subagents | `AGENTS.md` | _(inside CLAUDE.md)_ | `core/AGENTS.md` (@include) | always |
+| Operating rules, models, subagents | `AGENTS.md` | _(inside CLAUDE.md)_ | `core/AGENTS.md` (on-demand Read) | on-demand |
 | Operator profile | `USER.md` | _(inside CLAUDE.md or rules/)_ | `core/USER.md` (@include) | always |
-| Infrastructure, servers, services | `TOOLS.md` | _(inside CLAUDE.md)_ | `tools/TOOLS.md` (@include) | always |
+| Infrastructure, servers, services | `TOOLS.md` | _(inside CLAUDE.md)_ | `tools/TOOLS.md` (on-demand Read) | on-demand |
 | Boundaries, permissions, red zones | _(inside AGENTS.md)_ | `.claude/rules/*.md` | `core/rules.md` (@include) | always |
 | First-run setup ritual | `BOOTSTRAP.md` (deleted after) | _(none)_ | _(none -- install.sh replaces this)_ | once |
 | Periodic heartbeat checklist | `HEARTBEAT.md` | _(none)_ | _(cron scripts instead)_ | always |
@@ -27,12 +27,13 @@ We use **1 CLAUDE.md + @include** -- best of both:
 
 ```
 CLAUDE.md                    # SOUL: personality, principles (entry point)
-  @core/AGENTS.md            # models, subagents, pipelines
   @core/USER.md              # operator profile
   @core/rules.md             # boundaries, security
-  @tools/TOOLS.md            # servers, services, paths
   @core/warm/decisions.md    # rolling 14-day memory
-  @core/hot/recent.md        # rolling 24h journal
+  @core/hot/handoff.md       # compact extract (last 10 entries)
+  # On-demand (Read tool, NOT @include -- saves ~18KB):
+  # core/AGENTS.md            # models, subagents, pipelines
+  # tools/TOOLS.md            # servers, services, paths
 ```
 
 ---

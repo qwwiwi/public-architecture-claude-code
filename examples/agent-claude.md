@@ -26,9 +26,7 @@
 
 ## Memory Layers
 
-@core/AGENTS.md
 @core/USER.md
 @core/rules.md
-@tools/TOOLS.md
 @core/warm/decisions.md
-@core/hot/recent.md
+@core/hot/handoff.md

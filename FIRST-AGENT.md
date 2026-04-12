@@ -61,15 +61,13 @@ Create `~/.claude-lab/reviewer/.claude/CLAUDE.md`:
 
 ## Memory Layers
 
-@core/AGENTS.md
 @core/USER.md
 @core/rules.md
-@tools/TOOLS.md
 @core/warm/decisions.md
-@core/hot/recent.md
+@core/hot/handoff.md
 ```
 
-> **Key:** The `@core/...` lines tell Claude Code to load those files into context every session.
+> **Key:** The `@core/...` lines tell Claude Code to load those files into context every session. AGENTS.md and TOOLS.md are loaded on-demand via Read tool to save ~18KB tokens.
 
 ## Step 3: Write AGENTS.md
 

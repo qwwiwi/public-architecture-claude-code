@@ -26,14 +26,12 @@ Claude Code launch
 ├── ~/.claude/rules/*.md          language rules
 │
 └── {agent}/.claude/CLAUDE.md     agent SOUL
-    ├── @core/AGENTS.md           models, subagents
     ├── @core/USER.md             operator profile
     ├── @core/rules.md            boundaries
-    ├── @tools/TOOLS.md           servers, tools
     ├── @core/warm/decisions.md   rolling 14 days
-    └── @core/hot/recent.md       rolling 24 hours
+    └── @core/hot/handoff.md      compact extract (last 10 entries)
 
-~15-35K tokens depending on HOT size
+~10-25K tokens depending on HOT size
 ```
 
 ## Session Management

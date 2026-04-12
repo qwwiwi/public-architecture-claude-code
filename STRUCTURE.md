@@ -37,12 +37,10 @@
     ├── claude-code/                   WORKSPACE: Agent 1 (example name)
     │   └── .claude/
     │       ├── CLAUDE.md              SOUL (identity, character)
-    │       │   @core/AGENTS.md
     │       │   @core/USER.md
     │       │   @core/rules.md
-    │       │   @tools/TOOLS.md
     │       │   @core/warm/decisions.md
-    │       │   @core/hot/recent.md
+    │       │   @core/hot/handoff.md
     │       │
     │       ├── core/
     │       │   ├── AGENTS.md          models, subagents config
@@ -51,7 +49,8 @@
     │       │   ├── warm/
     │       │   │   └── decisions.md   rolling 14 days
     │       │   ├── hot/
-    │       │   │   └── recent.md      rolling 24 hours
+    │       │   │   ├── recent.md      rolling 24 hours (full journal)
+    │       │   │   └── handoff.md    compact extract (last 10 entries, @include)
     │       │   ├── MEMORY.md          COLD archive
     │       │   └── LEARNINGS.md       lessons from mistakes
     │       │
