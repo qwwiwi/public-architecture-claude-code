@@ -320,6 +320,89 @@ stdout from exit-0 hooks on `SessionStart` and `UserPromptSubmit` is added to Cl
 
 ---
 
+## Production Hooks (multi-agent pattern)
+
+These hooks form the production memory and safety pipeline for agents running via Telegram gateway.
+
+### SessionStart
+
+| Hook | Purpose |
+|------|---------|
+| **session-bootstrap.sh** | Loads top-scored learnings from `episodes.jsonl`, checks Firebase inbox for pending messages, sets agent heartbeat to `online`. First thing that runs — ensures the agent starts with full context. |
+
+### UserPromptSubmit
+
+| Hook | Purpose |
+|------|---------|
+| **auto-recall.mjs** | Sends user prompt to OpenViking semantic search, returns relevant memories as injected context. Adds long-term memory without consuming CLAUDE.md space. |
+| **local-recall.mjs** | Grep-searches local reference files (TOOLS.md, AGENTS.md, LEARNINGS.md) for keywords extracted from user prompt. Fast fallback when OpenViking is unavailable. |
+| **correction-detector.sh** | Pattern-matches correction phrases in user messages ("не надо", "неправильно", "я же сказал"). When detected, injects a reminder to capture a learning via `learnings-engine.mjs capture`. |
+
+### PreToolUse
+
+| Hook | Purpose |
+|------|---------|
+| **bash-firewall.sh** | Blocks dangerous Bash commands (`rm -rf`, `sudo`, `git push --force`, `DROP TABLE`, etc.) with exit 2. Matches against a configurable pattern list. Non-negotiable safety layer. |
+
+### PostToolUse
+
+| Hook | Purpose |
+|------|---------|
+| **audit-log.sh** | Appends every tool call (tool name, arguments, timestamp) to a local log file. Silent — never blocks. Essential for post-incident analysis. |
+| **review-reminder.sh** | Tracks cumulative Edit/Write count in the session. After 10+ edits, injects a reminder to spawn a `code-reviewer` subagent before marking the task complete. |
+
+### PreCompact
+
+| Hook | Purpose |
+|------|---------|
+| **flush-to-openviking.sh** | Pushes current HOT+WARM memory to OpenViking before compaction destroys context. Ensures no knowledge is lost during long sessions. |
+| **compact-notify.sh** | Alerts about upcoming compaction — logs a warning and optionally notifies the coordinator via Firebase message. |
+
+### Stop
+
+| Hook | Purpose |
+|------|---------|
+| **auto-capture.mjs** | Captures incremental conversation content to OpenViking for semantic indexing. Runs on every response completion — builds the agent's long-term memory automatically. |
+| **write-handoff.sh** | Generates deterministic `handoff.md` from `recent.md` — extracts last 5 entries, active topics, modified files, and pending messages. Next session starts where this one left off. |
+| **close-heartbeat.sh** | Updates agent status to `offline` in Firebase (`agents/{id}/status`). Coordinator uses this to know which agents are available. |
+
+### Production settings.json
+
+All 12 hooks wired together. Replace `{agent}` with your agent directory name (e.g., `silvana`):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{"matcher": "", "hooks": [
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/session-bootstrap.sh", "timeout": 10}
+    ]}],
+    "UserPromptSubmit": [{"matcher": "", "hooks": [
+      {"type": "command", "command": "node $HOME/.openviking/claude-code-memory-plugin/scripts/auto-recall.mjs", "timeout": 5},
+      {"type": "command", "command": "node $HOME/.openviking/claude-code-memory-plugin/scripts/local-recall.mjs", "timeout": 5},
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/correction-detector.sh", "timeout": 3}
+    ]}],
+    "PreToolUse": [{"matcher": "Bash", "hooks": [
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/bash-firewall.sh", "timeout": 5}
+    ]}],
+    "PostToolUse": [{"matcher": "", "hooks": [
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/audit-log.sh", "timeout": 5},
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/review-reminder.sh", "timeout": 3}
+    ]}],
+    "PreCompact": [{"matcher": "", "hooks": [
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/flush-to-openviking.sh", "timeout": 5},
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/compact-notify.sh", "timeout": 5}
+    ]}],
+    "Stop": [{"matcher": "", "hooks": [
+      {"type": "command", "command": "node $HOME/.openviking/claude-code-memory-plugin/scripts/auto-capture.mjs", "timeout": 10},
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/close-heartbeat.sh", "timeout": 5},
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/write-handoff.sh", "timeout": 5}
+    ]}]
+  }
+}
+```
+
+---
+
 ## Complete settings.json (all hooks)
 
 Everything combined — universal + project-specific. Remove what you don't need:
