@@ -12,9 +12,9 @@
 │  core/warm/decisions.md                   │
 │  Always in context, auto-rotate to COLD   │
 ├──────────────────────────────────────────┤
-│  HOT (rolling 24 hours)                  │
-│  core/hot/recent.md                       │
-│  Always in context, gateway auto-writes   │
+│  HOT (handoff at startup)                │
+│  core/hot/handoff.md (last 10 entries)    │
+│  In context; recent.md NOT loaded         │
 ├──────────────────────────────────────────┤
 │  COLD (archive, grows)                   │
 │  MEMORY.md, LEARNINGS.md                  │

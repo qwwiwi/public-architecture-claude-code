@@ -75,9 +75,7 @@ These require the Superpowers plugin:
 
 3. **Use /compact at logical breakpoints** -- after research (before implementation), after implementation (before testing).
 
-4. **Start with Sonnet, switch to Opus when needed:**
-   - Sonnet: routine coding, tests, simple features
-   - Opus: architecture decisions, complex debugging, multi-file refactors
+4. **Use Opus as primary model for all coding.** Sonnet only for subagents (search, research, parallel exploration). Code quality requires the best model.
 
 5. **Check /cost regularly** -- understand where tokens go.
 

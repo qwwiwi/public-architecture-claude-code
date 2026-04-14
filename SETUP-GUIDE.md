@@ -13,8 +13,8 @@
 ## Требования
 
 - VPS (Ubuntu 22.04+) или Mac
-- Node.js 18+ (`node --version`)
-- Подписка Anthropic Max ($100-200/мес) или API key
+- Node.js 22 (`node --version`)
+- Подписка Anthropic Max ($100-200/мес)
 - (Опционально) Telegram аккаунт
 
 ---
