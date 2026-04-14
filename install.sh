@@ -307,7 +307,7 @@ fi
 
 log "Copying memory management scripts..."
 
-for script in trim-hot.sh compress-warm.sh rotate-warm.sh memory-rotate.sh; do
+for script in trim-hot.sh compress-warm.sh rotate-warm.sh ov-session-sync.sh memory-rotate.sh; do
     if [ -f "${SCRIPTS_DIR}/${script}" ]; then
         if [ ! -f "${WORKSPACE}/scripts/${script}" ]; then
             cp "${SCRIPTS_DIR}/${script}" "${WORKSPACE}/scripts/${script}"
@@ -499,6 +499,7 @@ echo "       crontab -e"
 echo "       30 4 * * * bash ${WORKSPACE}/scripts/rotate-warm.sh"
 echo "       0  5 * * * bash ${WORKSPACE}/scripts/trim-hot.sh"
 echo "       0  6 * * * bash ${WORKSPACE}/scripts/compress-warm.sh"
+echo "       30 6 * * * bash ${WORKSPACE}/scripts/ov-session-sync.sh >> /tmp/ov-sync.log 2>&1"
 echo "       0 21 * * * bash ${WORKSPACE}/scripts/memory-rotate.sh"
 echo ""
 echo "    5. (Optional) Add more agents:"

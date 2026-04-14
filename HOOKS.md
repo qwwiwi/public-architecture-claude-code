@@ -324,6 +324,26 @@ stdout from exit-0 hooks on `SessionStart` and `UserPromptSubmit` is added to Cl
 
 These hooks form the production memory and safety pipeline for agents running via Telegram gateway.
 
+### All production hooks
+
+| Hook | Event | Description |
+|------|-------|-------------|
+| block-dangerous.sh | PreToolUse (Bash) | Blocks rm -rf, push --force, DROP TABLE |
+| protect-files.sh | PreToolUse (Edit/Write) | Protects .env, .pem, .key, secrets/ |
+| log-commands.sh | PostToolUse (Bash) | Logs every command |
+| session-bootstrap.sh | SessionStart | Loads top-5 learnings, checks inbox, heartbeat |
+| auto-recall.mjs | UserPromptSubmit | Semantic search in OpenViking |
+| local-recall.sh | UserPromptSubmit | Local grep in LEARNINGS/TOOLS |
+| correction-detector.sh | UserPromptSubmit | Catches correction phrases, triggers learning |
+| bash-firewall.sh | PreToolUse (Bash) | Additional bash command filtering |
+| review-reminder.sh | PostToolUse | After 10+ edits, reminds code review |
+| audit-log.sh | PostToolUse | Audit trail |
+| auto-capture.mjs | Stop | Captures conversation to OpenViking |
+| write-handoff.sh | Stop | Generates handoff.md (last 10 entries) |
+| flush-to-openviking.sh | PreCompact | Saves HOT+WARM to OV before compaction |
+| compact-notify.sh | PreCompact | Notifies about compaction |
+| close-heartbeat.sh | Stop | Sets agent status offline |
+
 ### SessionStart
 
 | Hook | Purpose |
@@ -335,20 +355,23 @@ These hooks form the production memory and safety pipeline for agents running vi
 | Hook | Purpose |
 |------|---------|
 | **auto-recall.mjs** | Sends user prompt to OpenViking semantic search, returns relevant memories as injected context. Adds long-term memory without consuming CLAUDE.md space. |
-| **local-recall.mjs** | Grep-searches local reference files (TOOLS.md, AGENTS.md, LEARNINGS.md) for keywords extracted from user prompt. Fast fallback when OpenViking is unavailable. |
-| **correction-detector.sh** | Pattern-matches correction phrases in user messages ("не надо", "неправильно", "я же сказал"). When detected, injects a reminder to capture a learning via `learnings-engine.mjs capture`. |
+| **local-recall.sh** | Grep-searches local reference files (TOOLS.md, AGENTS.md, LEARNINGS.md) for keywords extracted from user prompt. Fast fallback when OpenViking is unavailable. |
+| **correction-detector.sh** | Pattern-matches correction phrases in user messages ("not like that", "wrong", "I said"). When detected, injects a reminder to capture a learning via `learnings-engine.mjs capture`. |
 
 ### PreToolUse
 
 | Hook | Purpose |
 |------|---------|
-| **bash-firewall.sh** | Blocks dangerous Bash commands (`rm -rf`, `sudo`, `git push --force`, `DROP TABLE`, etc.) with exit 2. Matches against a configurable pattern list. Non-negotiable safety layer. |
+| **block-dangerous.sh** | Blocks dangerous Bash commands (`rm -rf`, `push --force`, `DROP TABLE`) with exit 2. First line of defense. |
+| **protect-files.sh** | Blocks edits to `.env`, `.pem`, `.key`, `secrets/` files. Protects sensitive paths from accidental modification. |
+| **bash-firewall.sh** | Additional Bash command filtering beyond block-dangerous. Configurable pattern list. Non-negotiable safety layer. |
 
 ### PostToolUse
 
 | Hook | Purpose |
 |------|---------|
-| **audit-log.sh** | Appends every tool call (tool name, arguments, timestamp) to a local log file. Silent — never blocks. Essential for post-incident analysis. |
+| **log-commands.sh** | Logs every Bash command with timestamp. Silent — never blocks. Essential for post-incident analysis. |
+| **audit-log.sh** | Appends every tool call (tool name, arguments, timestamp) to a local log file. Broader than log-commands — covers all tools. |
 | **review-reminder.sh** | Tracks cumulative Edit/Write count in the session. After 10+ edits, injects a reminder to spawn a `code-reviewer` subagent before marking the task complete. |
 
 ### PreCompact

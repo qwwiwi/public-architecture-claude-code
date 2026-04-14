@@ -14,6 +14,12 @@ Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (project-on
 }
 ```
 
+### Auto-compaction window
+
+Set `CLAUDE_CODE_AUTO_COMPACT_WINDOW=400000` in settings.json env block. This is the ONLY env variable you need to change. Recommended by Boris Cherny (Claude Code lead at Anthropic). Auto-compaction triggers at 400K instead of default 800K, giving the agent deeper thinking within the working window.
+
+Do not set MAX_THINKING_TOKENS, SUBAGENT_MODEL, or CLAUDE_AUTOCOMPACT_PCT_OVERRIDE -- leave defaults.
+
 ### What this does
 
 | Setting | Default | Recommended | Why |
@@ -32,6 +38,7 @@ Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (project-on
 |---|---|---|---|
 | **Opus 4.6** | claude-opus-4-6 | **Primary** | Code writing, review, planning, coordination |
 | **Sonnet 4.6** | claude-sonnet-4-6 | **Subagents** | Research, search, exploration, data collection |
+| **Haiku 4.5** | claude-haiku-4-5-20251001 | **Light tasks** | Quick lookups, simple transforms, low-cost operations |
 | **Codex GPT-5.4** | OpenAI | **Optional** | Double review (second opinion alongside Opus) |
 | **Sonar** | Perplexity | **Optional** | Web research, fact-checking |
 
