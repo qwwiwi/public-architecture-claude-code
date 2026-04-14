@@ -60,8 +60,8 @@ Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (project-on
 
 ### The problem
 
-Claude Code has a context window (1,000,000 tokens / 1M for Opus 4.6 and Sonnet 4.6). As conversation grows:
-- Agent quality **degrades** past ~50% usage
+Claude Code has a base context window of 1,000,000 tokens (1M). However, model quality degrades well before that limit. We set `CLAUDE_CODE_AUTO_COMPACT_WINDOW=400000` to auto-compact at 400K — this is the **working context**. As conversation approaches this limit:
+- Agent quality **degrades** past ~50% of working context (~200K tokens)
 - Instructions get ignored
 - Responses become less focused
 

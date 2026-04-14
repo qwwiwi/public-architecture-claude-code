@@ -330,7 +330,7 @@ https://github.com/qwwiwi/jarvis-telegram-gateway
 ## FAQ
 
 **Q: Сколько токенов занимает архитектура?**
-A: ~10,000-25,000 из 1,000,000 (1-3% окна Opus). CLAUDE.md загружает 4 файла через @include (USER.md, rules.md, decisions.md, handoff.md). AGENTS.md и TOOLS.md загружаются по запросу через Read tool, что экономит ~18KB. Cron скрипты держат hot/recent.md в пределах 10-20 KB.
+A: ~10,000-25,000 токенов (~3-6% от 400К рабочего окна). Базовое окно 1М, но мы ставим CLAUDE_CODE_AUTO_COMPACT_WINDOW=400000 для лучшего качества. CLAUDE.md загружает 4 файла через @include (USER.md, rules.md, decisions.md, handoff.md). AGENTS.md и TOOLS.md загружаются по запросу через Read tool, что экономит ~18KB. Cron скрипты держат hot/recent.md в пределах 10-20 KB.
 
 **Q: Можно без Opus?**
 A: Можно на Sonnet, но Opus лучше справляется с длинным контекстом и @includes.

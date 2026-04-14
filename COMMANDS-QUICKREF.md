@@ -41,7 +41,7 @@ Context issues?
 
 | Command | What it does | When to use |
 |---------|-------------|-------------|
-| `/compact` | Summarize old messages, free context | At 50%+ context usage |
+| `/compact` | Summarize old messages, free context | At logical breakpoints (auto-compact handles 400K limit) |
 | `/clear` | Full reset -- new conversation | Between unrelated tasks |
 | `/cost` | Show token usage and cost | Monitor spending |
 | `/model opus` | Switch to Opus | Complex architecture decisions |

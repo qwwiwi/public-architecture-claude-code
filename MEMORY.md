@@ -361,7 +361,7 @@ IDENTITY is fixed cost -- it loads every session regardless. WARM and HOT are va
 All 4 cron scripts ran successfully. HOT trimmed to ~20 KB, WARM compressed to ~3 KB.
 
 ```
-IDENTITY: 17,100 + WARM: 1,350 + HOT: 9,000 = 27,450 tokens (2.7% of 1M)
+IDENTITY: 17,100 + WARM: 1,350 + HOT: 9,000 = 27,450 tokens (~7% of 400K working context)
 ```
 
 This is the target operating state. The agent starts each session with clean, focused context.
@@ -371,7 +371,7 @@ This is the target operating state. The agent starts each session with clean, fo
 Active day with 150+ messages. HOT grew to ~80 KB, WARM accumulated entries from trim-hot.
 
 ```
-IDENTITY: 17,100 + WARM: 6,750 + HOT: 36,000 = 59,850 tokens (6.0% of 1M)
+IDENTITY: 17,100 + WARM: 6,750 + HOT: 36,000 = 59,850 tokens (~15% of 400K working context)
 ```
 
 Still within acceptable range but agent quality starts degrading. The operator should run `/compact` manually or wait for cron.
@@ -381,18 +381,19 @@ Still within acceptable range but agent quality starts degrading. The operator s
 Cron jobs failed silently. No compression for 7 days. HOT has accumulated ~200 KB of raw logs.
 
 ```
-IDENTITY: 17,100 + WARM: 6,750 + HOT: 90,000 = 113,850 tokens (11.4% of 1M)
+IDENTITY: 17,100 + WARM: 6,750 + HOT: 90,000 = 113,850 tokens (~29% of 400K working context)
 ```
 
 Agent noticeably ignores instructions buried in IDENTITY. Emergency trim (>20 KB) will eventually cap HOT at ~600 lines, but quality is already degraded.
 
 ### Key insight
 
-Even at maximum load, the architecture uses only 6-11% of the Opus context window. The 1M token limit is never the bottleneck. The compression system exists not to save money but to keep context CLEAN -- an agent with 80 KB of raw conversation logs performs worse than one with 20 KB of structured facts, because attention is finite even when context is not.
+The base context window is 1M tokens, but we set `CLAUDE_CODE_AUTO_COMPACT_WINDOW=400000` because model quality degrades well before 1M. The **working context is 400K**. At worst case (29% consumed by memory), only 284K tokens remain for actual work. The compression system exists not to save money but to keep context CLEAN -- an agent with 80 KB of raw conversation logs performs worse than one with 20 KB of structured facts, because attention is finite even when context is not.
 
 ### Reference limits
 
-- Opus 4.6 / Sonnet 4.6 context window: 1,000,000 tokens (~830K usable after system prompt)
+- Opus 4.6 / Sonnet 4.6 base context window: 1,000,000 tokens
+- Working context (via CLAUDE_CODE_AUTO_COMPACT_WINDOW): 400,000 tokens
 - CLAUDE.md recommended size: under 200 lines (beyond that Claude starts ignoring instructions)
 - @import max recursion depth: 5 hops
 - Sonnet compression (compress-warm.sh) keeps WARM compact at ~3 KB even with daily additions from trim-hot.sh

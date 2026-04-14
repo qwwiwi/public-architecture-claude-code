@@ -328,7 +328,7 @@ These hooks form the production memory and safety pipeline for agents running vi
 
 | Hook | Purpose |
 |------|---------|
-| **session-bootstrap.sh** | Loads top-scored learnings from `episodes.jsonl`, checks Firebase inbox for pending messages, sets agent heartbeat to `online`. First thing that runs — ensures the agent starts with full context. |
+| **session-bootstrap.sh** | Loads top-scored learnings from `episodes.jsonl`, checks inbox for pending messages, sets agent heartbeat to `online`. First thing that runs — ensures the agent starts with full context. |
 
 ### UserPromptSubmit
 
@@ -356,7 +356,7 @@ These hooks form the production memory and safety pipeline for agents running vi
 | Hook | Purpose |
 |------|---------|
 | **flush-to-openviking.sh** | Pushes current HOT+WARM memory to OpenViking before compaction destroys context. Ensures no knowledge is lost during long sessions. |
-| **compact-notify.sh** | Alerts about upcoming compaction — logs a warning and optionally notifies the coordinator via Firebase message. |
+| **compact-notify.sh** | Alerts about upcoming compaction — logs a warning and optionally notifies the coordinator. |
 
 ### Stop
 
@@ -364,7 +364,7 @@ These hooks form the production memory and safety pipeline for agents running vi
 |------|---------|
 | **auto-capture.mjs** | Captures incremental conversation content to OpenViking for semantic indexing. Runs on every response completion — builds the agent's long-term memory automatically. |
 | **write-handoff.sh** | Generates deterministic `handoff.md` from `recent.md` — extracts last 5 entries, active topics, modified files, and pending messages. Next session starts where this one left off. |
-| **close-heartbeat.sh** | Updates agent status to `offline` in Firebase (`agents/{id}/status`). Coordinator uses this to know which agents are available. |
+| **close-heartbeat.sh** | Updates agent status to `offline`. Coordinator uses this to know which agents are available. |
 
 ### Production settings.json
 
