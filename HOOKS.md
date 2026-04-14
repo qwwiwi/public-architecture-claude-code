@@ -363,7 +363,7 @@ These hooks form the production memory and safety pipeline for agents running vi
 | Hook | Purpose |
 |------|---------|
 | **auto-capture.mjs** | Captures incremental conversation content to OpenViking for semantic indexing. Runs on every response completion — builds the agent's long-term memory automatically. |
-| **write-handoff.sh** | Generates deterministic `handoff.md` from `recent.md` — extracts last 5 entries, active topics, modified files, and pending messages. Next session starts where this one left off. |
+| **write-handoff.sh** | Generates deterministic `handoff.md` from `recent.md` — extracts last 10 entries, active topics, modified files, and pending messages. Next session starts where this one left off. |
 | **close-heartbeat.sh** | Updates agent status to `offline`. Coordinator uses this to know which agents are available. |
 
 ### Production settings.json
