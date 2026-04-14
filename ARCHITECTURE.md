@@ -253,3 +253,6 @@ Order: rotate-warm (clear old) -> trim-hot (add new to WARM) -> compress-warm (r
 | `/reset` | Save important context to COLD (MEMORY.md), start new session |
 | `/reset force` | Delete session immediately, no save |
 | `/status` | Show session age, memory file sizes (rules, warm, hot, cold) |
+| `/new` | Save handoff + start new session |
+| `/stop` | Stop current Claude response |
+| `/help` | Show available commands |

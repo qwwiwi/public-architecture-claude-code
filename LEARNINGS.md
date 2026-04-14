@@ -191,6 +191,63 @@ Repeats column in LEARNINGS.md -- recurrence counter. >0 = rule not working, str
 | **Weekly audit** | Cron: if agent worked but 0 learnings this week -> alert operator |
 | **Post-task check** | After task completion: were there corrections? If yes -- learning recorded? |
 
+## Learnings v2 (Engine-based)
+
+Advanced learnings system using `learnings-engine.mjs` for automated capture, scoring, promotion, and maintenance.
+
+### Commands
+
+| Command | What it does |
+|---------|-------------|
+| `capture` | Record a new learning from correction or self-diagnosis |
+| `score` | Calculate relevance score for a learning (recency, frequency, severity) |
+| `promote` | Move high-scoring learning up the reliability pyramid |
+| `lint` | Audit all learnings -- find stale, duplicate, or ineffective rules |
+| `archive` | Move old/resolved learnings to archive |
+| `bump` | Increment repeat counter for a recurring mistake |
+| `report` | Generate summary of learnings stats (counts, scores, promotion candidates) |
+| `sync` | Push learnings to git repo (branch per agent) |
+
+### Storage: episodes.jsonl
+
+Each learning is stored as a JSON line in `episodes.jsonl`:
+
+```json
+{"ts":"2026-04-14T12:00:00Z","type":"workflow","context":"Deploy without backup","error":"Lost .next","rule":"Always backup before deploy","score":0.92,"freq":2,"agent":"sa-claude"}
+```
+
+### Scoring and Promotion
+
+- **Score > 0.8** or **frequency 3+** triggers automatic promotion
+- Scoring factors: recency (newer = higher), frequency (more repeats = higher), severity (prod impact = higher)
+
+### Promotion Pyramid (weak to strong)
+
+| Level | Target | Durability | Who changes |
+|-------|--------|-----------|-------------|
+| 1 | Session memory | Lost on compact/reset | Agent |
+| 2 | episodes.jsonl | Scored top-5 injected at startup, fades after 30 days | Agent |
+| 3 | TOOLS.md / SKILL.md | Found by local-recall grep on request | Agent (GREEN zone) |
+| 4 | CLAUDE.md / rules.md | Always in context | Operator only (RED zone) |
+| 5 | Scripts / Hooks | Runs automatically, no agent involvement needed | Operator or agent (with approval) |
+
+The more critical the mistake, the higher up the pyramid it should be promoted. Critical production issues go straight to hooks/scripts.
+
+### Integration with Hooks
+
+- **correction-detector.sh** (UserPromptSubmit hook): detects operator corrections ("no", "wrong", "not like that") and triggers `capture` automatically
+- **review-reminder.sh** (PostToolUse hook): reminds agent to self-review after N tool calls without a review
+- **SessionStart hook**: injects scored top-5 learnings from episodes.jsonl into context
+
+### Auto-sync to Git
+
+Learnings are synced to a shared git repository with one branch per agent:
+
+```bash
+echo '{"context":"...","error":"...","rule":"..."}' | node scripts/learnings-engine.mjs capture
+node scripts/learnings-engine.mjs sync   # pushes to {agent}/learnings branch
+```
+
 ## LEARNINGS.md Template
 
 ```markdown

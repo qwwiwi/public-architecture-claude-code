@@ -14,7 +14,7 @@
 | IDENTITY | CLAUDE.md, rules.md | manual only |
 | YELLOW | USER.md, AGENTS.md, TOOLS.md | agent on trigger |
 | WARM 14d | core/warm/decisions.md | auto-rotate |
-| HOT 72h | core/hot/recent.md | gateway auto |
+| HOT 24h | core/hot/recent.md | gateway auto |
 | COLD | core/MEMORY.md | on-demand Read |
 | L4 | OpenViking semantic search | curl on-demand |
 
