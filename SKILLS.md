@@ -49,7 +49,7 @@ ${CLAUDE_SESSION_ID} for session ID.
 | `user-invocable` | No | `true` = appears in `/` menu. Default: true |
 | `disable-model-invocation` | No | `true` = only manual `/name` call, Claude won't auto-trigger |
 | `allowed-tools` | No | Tools that skip permission prompts. Supports glob: `Bash(npm *)` |
-| `model` | No | Override model: `sonnet`, `opus`, `haiku`, or full model ID |
+| `model` | No | Override model: `sonnet`, `opus`, or full model ID |
 | `effort` | No | `low`, `medium`, `high`, `max` |
 | `context` | No | `fork` = runs in isolated subagent (protects main context) |
 | `agent` | No | Subagent type for `context: fork` (e.g., `Explore`) |

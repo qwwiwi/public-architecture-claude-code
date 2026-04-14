@@ -84,7 +84,7 @@ CHARACTER_TRAITS="${CHARACTER_TRAITS:-Efficient, precise, proactive. Reports res
 
 # Primary model
 echo ""
-echo "  Models: opus (best), sonnet (fast+cheap), haiku (fastest+cheapest)"
+echo "  Models: opus (code+review), sonnet (subagents+research)"
 ask "Primary model [opus]"
 read -r PRIMARY_MODEL
 PRIMARY_MODEL="${PRIMARY_MODEL:-opus}"

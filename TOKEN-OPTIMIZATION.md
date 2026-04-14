@@ -8,71 +8,53 @@ Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (project-on
 
 ```json
 {
-  "model": "sonnet",
   "env": {
-    "MAX_THINKING_TOKENS": "10000",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "400000"
   }
 }
 ```
 
-### What each setting does
+### What this does
 
-| Setting | Default | Recommended | Savings | Why |
-|---------|---------|-------------|---------|-----|
-| `model` | opus | **sonnet** | ~60% cost | Sonnet handles 90% of tasks well |
-| `MAX_THINKING_TOKENS` | unlimited | **10000** | ~70% hidden cost | Limits internal reasoning (hidden tokens you still pay for) |
-| `CLAUDE_CODE_SUBAGENT_MODEL` | inherits parent | **haiku** | ~90% for subagents | Exploration/search doesn't need Opus |
-| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | 80 | **50** | better quality | Compact earlier = cleaner context |
-| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` | ~800000 | **400000** | fresher context | Default auto-compact triggers at ~800K tokens (80% of 1M context window). Setting to 400K compacts earlier, keeping context fresh and improving thinking depth. Recommendation from Boris Cherny (head of Claude Code at Anthropic) |
+| Setting | Default | Recommended | Why |
+|---------|---------|-------------|-----|
+| `CLAUDE_CODE_AUTO_COMPACT_WINDOW` | ~800000 | **400000** | Default auto-compact triggers at ~800K tokens (80% of 1M context window). Setting to 400K compacts earlier, keeping context fresh and improving thinking depth. Recommendation from Boris Cherny (head of Claude Code at Anthropic) |
 
-## Model Selection: When to Use What
+## Model Strategy
 
-```
-Task complexity?
-  │
-  ├── Simple (formatting, search, rename, tests)
-  │   └── Sonnet or Haiku
-  │
-  ├── Medium (feature, bug fix, refactor, API)
-  │   └── Sonnet (default)
-  │
-  └── Complex (architecture, multi-file refactor, debugging, planning)
-      └── Opus (/model opus)
-```
+### Core principle
+
+**Opus for code and decisions, Sonnet for subagents and bulk work.** No half-measures — code quality requires the best model. Subagents handle volume.
+
+### Model roles
+
+| Model | ID | Role | Use for |
+|---|---|---|---|
+| **Opus 4.6** | claude-opus-4-6 | **Primary** | Code writing, review, planning, coordination |
+| **Sonnet 4.6** | claude-sonnet-4-6 | **Subagents** | Research, search, exploration, data collection |
+| **Codex GPT-5.4** | OpenAI | **Optional** | Double review (second opinion alongside Opus) |
+| **Sonar** | Perplexity | **Optional** | Web research, fact-checking |
+
+> **Opus via OpenRouter — NEVER.** Use native Anthropic API or Anthropic Max subscription ($100-200/mo).
 
 ### Cost comparison (Anthropic Max subscription)
 
-| Model | Input | Output | Relative cost | Use for |
-|-------|-------|--------|---------------|---------|
-| **Haiku 4.5** | $0.80/M | $4/M | **1x** (baseline) | Subagents, search, exploration |
-| **Sonnet 4.6** | $3/M | $15/M | **~4x** | Daily coding, tests, features |
-| **Opus 4.6** | $15/M | $75/M | **~19x** | Architecture, complex debugging |
+| Model | Input | Output | Relative cost |
+|-------|-------|--------|---------------|
+| **Sonnet 4.6** | $3/M | $15/M | **1x** (baseline for subagents) |
+| **Opus 4.6** | $15/M | $75/M | **~5x** (worth it for code quality) |
 
-> **On Max subscription ($100-200/mo):** All models included. Cost = rate limit consumption, not $. Still, lighter models = faster responses + less context eaten.
-
-### Models reference
-
-| Model | ID | Strength | Forbidden |
-|---|---|---|---|
-| Opus 4.6 | claude-opus-4-6 | Primary: code writing, coordination, Russian | -- |
-| Codex GPT-5.4 | OpenAI | Optional: architecture review, audit, double review | -- |
-| Sonnet 4.6 | claude-sonnet-4-6 | Mass tasks, data collection, bulk operations | Code review |
-| Haiku 4.5 | claude-haiku-4-5 | Light tasks, classification, quick lookups | Complex code, architecture |
-| Sonar | Perplexity | Web research, fact-checking | Code |
-
-> **Opus via OpenRouter -- NEVER.** Use native Anthropic API or Anthropic Max subscription.
+> **On Max subscription ($100-200/mo):** All models included. Cost = rate limit consumption, not $. Sonnet subagents = faster responses + less context consumed.
 
 ### Practical model strategy
 
 | Agent role | Model | Why |
 |-----------|-------|-----|
-| Coordinator | Opus | Needs deep reasoning for routing, planning |
-| Coder | Opus (main) + Sonnet (subagents) | Code quality matters, but search/tests can be cheaper |
-| Inbox / Knowledge | Sonnet | High volume, parsing/summarization |
-| Subagents (search, analysis) | Haiku or Sonnet | Cheapest for bulk work |
+| Coordinator | Opus | Deep reasoning for routing, planning |
+| Coder | Opus | Code quality requires the best model |
+| Code reviewer | Opus + Codex GPT-5.4 | Double review — two independent models |
+| Subagents (search, analysis) | Sonnet | Fast, cost-effective for bulk work |
+| Web research | Sonar (Perplexity) | Specialized for web search |
 
 ## Context Management
 
@@ -167,20 +149,18 @@ Pattern: [thing] [action] [reason]. [next step].
 
 | Mistake | Why it's bad | Fix |
 |---------|-------------|-----|
-| Always using Opus | 19x more expensive, slower | Default to Sonnet, switch to Opus for complex tasks |
+| Using Sonnet for code | Code quality suffers | Opus for code, Sonnet only for subagents |
 | Never compacting | Context pollution, quality drops | `/compact` at logical breakpoints |
 | CLAUDE.md > 200 lines | Agent ignores instructions | Extract to skills, keep core lean |
-| No cron compression | HOT memory eats 70% of context | Set up 4 cron scripts (see MEMORY.md) |
+| No cron compression | HOT memory eats 70% of context | Set up cron scripts (see MEMORY.md) |
 | Running everything in one session | Context fills up | `/clear` between unrelated tasks |
 | Not checking /cost | Surprise bills or slow responses | Check periodically |
 
 ## Summary: Day 1 Checklist
 
-- [ ] Set `model: sonnet` in settings.json
-- [ ] Set `MAX_THINKING_TOKENS: 10000`
-- [ ] Set `CLAUDE_CODE_SUBAGENT_MODEL: haiku`
-- [ ] Set `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE: 50`
+- [ ] Set `CLAUDE_CODE_AUTO_COMPACT_WINDOW: 400000` in settings.json
+- [ ] Use Opus as primary model (code, review, planning)
+- [ ] Use Sonnet for subagents (search, research, exploration)
 - [ ] Keep CLAUDE.md under 200 lines
 - [ ] Use `/compact` at logical breakpoints
 - [ ] Use `/clear` between tasks
-- [ ] Switch to `/model opus` only for complex work

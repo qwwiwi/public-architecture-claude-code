@@ -6,7 +6,7 @@ Subagents are isolated Claude Code instances spawned via the Agent tool. Each ru
 
 | Type | Model | Tools | Best for |
 |------|-------|-------|----------|
-| **Explore** | Haiku (fast) | Read-only (Read, Glob, Grep) | Codebase search, finding files, quick answers |
+| **Explore** | Sonnet (fast) | Read-only (Read, Glob, Grep) | Codebase search, finding files, quick answers |
 | **Plan** | Inherits parent | Read-only | Architecture research, planning |
 | **general-purpose** | Inherits parent | All tools | Complex multi-step tasks, code changes |
 
@@ -15,7 +15,7 @@ Subagents are isolated Claude Code instances spawned via the Agent tool. Each ru
 **Use subagents for:**
 - Codebase exploration (keeps main context clean)
 - Parallel independent tasks (up to 5 simultaneously)
-- Expensive research (route to cheaper models: Haiku/Sonnet)
+- Expensive research (route to Sonnet for cost efficiency)
 - Restricted operations (read-only agent can't break code)
 - Long investigations that would pollute main context
 
@@ -74,7 +74,7 @@ You are a senior code reviewer. Analyze code for:
 | `description` | Yes | When Claude delegates to this agent (shown in tool picker) |
 | `tools` | No | Allowlist of tools (e.g., `Read, Glob, Grep`). Default: all |
 | `disallowedTools` | No | Denylist of tools |
-| `model` | No | `sonnet`, `opus`, `haiku`, `inherit`, or full model ID |
+| `model` | No | `sonnet`, `opus`, `inherit`, or full model ID |
 | `permissionMode` | No | `default`, `acceptEdits`, `auto`, `bypassPermissions`, `plan` |
 | `maxTurns` | No | Max agentic turns before stopping |
 | `memory` | No | `user`, `project`, `local` — enables persistent memory for this subagent |
@@ -89,10 +89,9 @@ You are a senior code reviewer. Analyze code for:
 
 ### Model Resolution (priority)
 
-1. `CLAUDE_CODE_SUBAGENT_MODEL` env var (overrides everything)
-2. Per-invocation `model` parameter (in Agent tool call)
-3. Frontmatter `model` field
-4. Parent conversation model (inherits)
+1. Per-invocation `model` parameter (in Agent tool call)
+2. Frontmatter `model` field
+3. Parent conversation model (inherits)
 
 ## Practical Examples
 
