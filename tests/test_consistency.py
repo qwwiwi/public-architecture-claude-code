@@ -4,12 +4,8 @@ Consistency tests for public-architecture-claude-code documentation.
 Verifies that all markdown files use consistent terminology, endpoints,
 and references across the repository.
 """
-import os
 import re
 from pathlib import Path
-from typing import Generator
-
-import pytest
 
 REPO_ROOT = Path(__file__).parent.parent
 MD_FILES = sorted(REPO_ROOT.glob("**/*.md"))
@@ -44,7 +40,7 @@ class TestOpenVikingEndpoints:
 
         assert not violations, (
             "Found 127.0.0.1:1933 references (use localhost:1933):\n"
-            + "\n".join(f"  {p}:{n}: {l}" for p, n, l in violations)
+            + "\n".join(f"  {p}:{n}: {line}" for p, n, line in violations)
         )
 
     def test_no_sessions_api_references(self) -> None:
@@ -57,7 +53,7 @@ class TestOpenVikingEndpoints:
 
         assert not violations, (
             "Found /api/v1/sessions references (use temp_upload + add_resource):\n"
-            + "\n".join(f"  {p}:{n}: {l}" for p, n, l in violations)
+            + "\n".join(f"  {p}:{n}: {line}" for p, n, line in violations)
         )
 
 
@@ -189,7 +185,7 @@ class TestHotMemorySize:
 
         assert not violations, (
             "Found 48h/72h references in HOT memory context (should be 24h):\n"
-            + "\n".join(f"  {p}:{n}: {l}" for p, n, l in violations)
+            + "\n".join(f"  {p}:{n}: {line}" for p, n, line in violations)
         )
 
     def test_hot_size_warning_clarified(self) -> None:
@@ -223,7 +219,7 @@ class TestCrossReferences:
 
         assert not violations, (
             "Found mirrors/ script references (deprecated):\n"
-            + "\n".join(f"  {p}:{n}: {l}" for p, n, l in violations)
+            + "\n".join(f"  {p}:{n}: {line}" for p, n, line in violations)
         )
 
 

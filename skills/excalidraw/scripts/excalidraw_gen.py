@@ -38,7 +38,7 @@ def ex_id(prefix="el"):
 
 def text_size(text: str, base_w=220, line_h=26, pad=24) -> Tuple[int, int]:
     lines = (text or "").split("\n")
-    max_len = max((len(l) for l in lines), default=8)
+    max_len = max((len(line) for line in lines), default=8)
     width = max(base_w, min(520, int(max_len * 11 + pad * 2)))
     height = max(64, int(len(lines) * line_h + pad))
     return width, height
