@@ -337,7 +337,7 @@ These hooks form the production memory and safety pipeline for agents running vi
 | correction-detector.sh | UserPromptSubmit | Catches correction phrases, triggers learning |
 | bash-firewall.sh | PreToolUse (Bash) | Additional bash command filtering |
 | review-reminder.sh | PostToolUse | After 10+ edits, reminds code review |
-| audit-log.sh | PostToolUse | Audit trail |
+| activity-logger.sh | PostToolUse | Audit trail (local JSONL) |
 | auto-capture.mjs | Stop | Captures conversation to OpenViking |
 | write-handoff.sh | Stop | Generates handoff.md (last 10 entries) |
 | flush-to-openviking.sh | PreCompact | Saves HOT+WARM to OV before compaction |
@@ -371,7 +371,7 @@ These hooks form the production memory and safety pipeline for agents running vi
 | Hook | Purpose |
 |------|---------|
 | **log-commands.sh** | Logs every Bash command with timestamp. Silent — never blocks. Essential for post-incident analysis. |
-| **audit-log.sh** | Appends every tool call (tool name, arguments, timestamp) to a local log file. Broader than log-commands — covers all tools. |
+| **activity-logger.sh** | Appends every tool call (tool name, arguments, timestamp) to a local JSONL file. Broader than log-commands — covers all tools, no external dependencies. |
 | **review-reminder.sh** | Tracks cumulative Edit/Write count in the session. After 10+ edits, injects a reminder to spawn a `code-reviewer` subagent before marking the task complete. |
 
 ### PreCompact
@@ -408,7 +408,7 @@ All 12 hooks wired together. Replace `{agent}` with your agent directory name (e
       {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/bash-firewall.sh", "timeout": 5}
     ]}],
     "PostToolUse": [{"matcher": "", "hooks": [
-      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/audit-log.sh", "timeout": 5},
+      {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/activity-logger.sh", "timeout": 5},
       {"type": "command", "command": "$HOME/.claude-lab/{agent}/hooks/review-reminder.sh", "timeout": 3}
     ]}],
     "PreCompact": [{"matcher": "", "hooks": [
