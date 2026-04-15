@@ -55,10 +55,17 @@ This is the **only** env variable you need to change. No MAX_THINKING_TOKENS, no
 ├── hooks/                 # Shell scripts for automation
 │   ├── block-dangerous.sh # Blocks rm -rf, force push, DROP TABLE
 │   ├── protect-files.sh   # Protects .env, .pem, .key, secrets/*
+│   ├── activity-logger.sh # Logs every tool call to JSONL (PostToolUse)
+│   ├── session-logger.sh  # Logs session start/stop events
 │   └── ...
+├── logs/
+│   └── activity/          # Daily JSONL activity logs (chmod 600)
+│       ├── 2026-04-15.jsonl
+│       └── ...
 └── scripts/               # Cron scripts for memory rotation
     ├── trim-hot.sh        # HOT > 24h -> Sonnet compresses -> WARM
     ├── rotate-warm.sh     # WARM > 14 days -> COLD
+    ├── rotate-activity-logs.sh  # Activity logs > 30 days -> delete
     └── ...
 ```
 
@@ -104,6 +111,7 @@ L4 ────────── Semantic search on demand (OpenViking or simil
 | 06:00 | compress-warm.sh | WARM over 10KB -> Sonnet recompresses |
 | 06:30 | ov-session-sync.sh | HOT + WARM -> semantic search (L4) |
 | 21:00 | memory-rotate.sh | COLD over 5KB -> archive/YYYY-MM.md |
+| 05:00 | rotate-activity-logs.sh | Activity logs older than 30 days -> delete |
 
 Order matters: rotate WARM first, then compress HOT, then recompress WARM, then sync to L4.
 
@@ -131,6 +139,89 @@ Hooks are shell commands that execute on Claude Code lifecycle events. CLAUDE.md
 | **review-reminder.sh** | PostToolUse | After 10+ edits, reminds to run code review before commit |
 | **flush-to-openviking.sh** | PreCompact | Saves HOT+WARM to semantic search before compaction. Nothing is lost |
 | **write-handoff.sh** | Stop | Generates handoff.md -- last entries, active topics, modified files. Next session starts where this one left off |
+
+## Activity Logging: Tool Call Audit Trail
+
+Every tool call the agent makes (Bash, Read, Edit, Write, Grep, Glob, Agent, Skill) is logged to local JSONL files automatically via Claude Code hooks. **No LLM involvement** -- pure shell scripts, zero network calls.
+
+### Why
+
+- **Skill usage analysis** -- which skills are used, how often, for which tasks. Identify underused skills
+- **Error tracking** -- every failed tool call is logged with error details. Find patterns in failures
+- **Decision analysis** -- understand how the agent approaches tasks (tool sequence, subagent dispatch)
+- **Efficiency auditing** -- detect redundant operations, excessive file reads, unnecessary tool calls
+
+### How it works
+
+```
+PostToolUse ──────> activity-logger.sh ──> logs/activity/YYYY-MM-DD.jsonl
+PostToolUseFailure ─┘
+SessionStart ─────> session-logger.sh ──┘
+Stop ─────────────┘
+```
+
+Two hooks in `settings.json`:
+- **activity-logger.sh** -- fires on every tool call (success or failure). Extracts tool name, input details, errors
+- **session-logger.sh** -- fires on session start and stop. Marks session boundaries in the same log file
+
+### JSONL schema
+
+```json
+{
+  "ts": "2026-04-15T22:03:14Z",
+  "session": "53ab607f-9984-40f4-abbb-f549939862c6",
+  "event": "PostToolUse",
+  "tool": "Bash",
+  "detail": {"command": "git status", "description": "Show status"},
+  "error": null,
+  "cwd": "/home/user/.claude-lab/agent/.claude"
+}
+```
+
+Detail fields vary by tool:
+
+| Tool | Detail fields |
+|------|--------------|
+| Bash | command, description |
+| Read | file_path, offset, limit |
+| Edit/Write | file_path |
+| Grep | pattern, path, glob |
+| Glob | pattern, path |
+| Agent | description, subagent_type, model |
+| Skill | skill, args |
+
+### Analytics queries
+
+```bash
+# Most used tools today
+jq -r '.tool' logs/activity/2026-04-15.jsonl | sort | uniq -c | sort -rn
+
+# All Skill invocations (which skills, when, what args)
+jq 'select(.tool == "Skill")' logs/activity/*.jsonl
+
+# Errors only
+jq 'select(.error != null)' logs/activity/*.jsonl
+
+# Session count per day
+grep -c '"SessionStart"' logs/activity/*.jsonl
+
+# Tools per session
+jq -r '[.session, .tool] | @tsv' logs/activity/*.jsonl | sort | uniq -c | sort -rn
+```
+
+### Security
+
+- Log files are `chmod 600` (umask 077) -- only the agent owner can read them
+- Tool output/response is **not logged** -- only tool name and input parameters
+- Bash commands are logged in full (for audit), but secrets in env vars are not captured
+- Logs rotate after 30 days via `rotate-activity-logs.sh` (cron at 05:00 UTC)
+
+### Design decisions
+
+- **Single jq call** per hook invocation -- all JSON is built inside jq, no shell string interpolation (prevents JSON injection)
+- **Best-effort** -- no `set -e`, fallback error entry on parse failure. A broken hook should never block the agent
+- **No network calls** -- pure local disk I/O, 5-second timeout
+- **Daily rotation** -- one file per day, easy to grep by date range
 
 ## Model Strategy
 
