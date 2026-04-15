@@ -231,7 +231,7 @@ jq -r '[.session, .tool] | @tsv' logs/activity/*.jsonl | sort | uniq -c | sort -
 |---|---|---|---|
 | **Opus 4.6** | claude-opus-4-6 | **Primary** | Code writing, review, planning, coordination |
 | **Sonnet 4.6** | claude-sonnet-4-6 | **Subagents** | Research, search, exploration, memory compression |
-| **Codex GPT-5.4** | OpenAI | **Optional** | Double review (second opinion alongside Opus) |
+| **Codex GPT-5.4** | OpenAI | **Double review** | Code review via `/codex:review` and `/codex:adversarial-review` (plugin `openai/codex-plugin-cc`) |
 | **Sonar** | Perplexity | **Optional** | Web research, fact-checking |
 
 | Model | Input | Output | Relative cost |
