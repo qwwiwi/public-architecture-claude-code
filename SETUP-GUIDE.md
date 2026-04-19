@@ -48,7 +48,7 @@ Opus -- лучшая модель для архитектурных решени
 ```
 Установи плагин Superpowers. Выполни обе команды через Bash:
 
-claude plugins marketplace add obra/superpowers-marketplace
+claude plugins marketplace add pcvelz/superpowers
 claude plugins install superpowers@superpowers-marketplace
 
 Проверь: claude plugins list

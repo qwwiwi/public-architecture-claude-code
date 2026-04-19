@@ -2,7 +2,7 @@
 
 Essential commands for daily work with Claude Code. Organized by workflow.
 
-> **NOTE:** Some commands require the [Superpowers](https://github.com/obra/superpowers-marketplace) plugin. Install it first (see SETUP-GUIDE.md step 4).
+> **NOTE:** Some commands require the [Superpowers](https://github.com/pcvelz/superpowers) plugin. Install it first (see SETUP-GUIDE.md step 4).
 
 ## Core Workflow
 

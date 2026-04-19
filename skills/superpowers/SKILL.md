@@ -1,22 +1,23 @@
 ---
 name: superpowers
-description: "Agentic skills framework: TDD, debugging, planning, code-review, git-worktrees, parallel agents. 14 built-in skills that auto-activate by development context."
+description: "Agentic skills framework (pcvelz fork): TDD, debugging, planning, code-review, git-worktrees, parallel agents. 15 skills with .tasks.json persistence between sessions."
 user-invocable: false
 ---
 
-# Superpowers
+# Superpowers (pcvelz)
 
-[Superpowers](https://github.com/obra/superpowers) -- agentic skills framework for Claude Code.
-14 built-in skills that auto-activate by development context.
+[Superpowers](https://github.com/pcvelz/superpowers) -- extended fork of obra/superpowers for Claude Code.
+15 built-in skills that auto-activate by development context.
+Key advantage: `.tasks.json` persistence -- plans survive between sessions.
 
 ## Install
 
 ```bash
-claude plugins marketplace add obra/superpowers-marketplace
+claude plugins marketplace add pcvelz/superpowers
 claude plugins install superpowers@superpowers-marketplace
 ```
 
-## Skills Included
+## Skills Included (15)
 
 ### Testing & Quality
 - **test-driven-development** -- RED-GREEN-REFACTOR cycle
@@ -24,23 +25,33 @@ claude plugins install superpowers@superpowers-marketplace
 - **systematic-debugging** -- 4-phase root cause analysis
 
 ### Planning
-- **brainstorming** -- refine ideas through questioning before implementation
-- **writing-plans** -- detailed implementation plans with checkpoints
-- **executing-plans** -- batch execution with review gates
+- **brainstorming** -- 9-step design-first flow, hard gate before code
+- **writing-plans** -- plans with `.tasks.json` (goal, files, acceptanceCriteria, verifyCommand)
+- **executing-plans** -- loads `.tasks.json`, continues from last completed task
 
 ### Collaboration
 - **requesting-code-review** -- pre-review checklist
 - **receiving-code-review** -- implement review feedback with rigor
 - **dispatching-parallel-agents** -- concurrent subagent workflows
-- **subagent-driven-development** -- two-stage review process
+- **subagent-driven-development** -- two-stage review (spec compliance + code quality)
 
 ### Git
 - **using-git-worktrees** -- isolated development branches
 - **finishing-a-development-branch** -- merge/PR decisions
 
 ### Meta
-- **writing-skills** -- create new skills
-- **using-superpowers** -- intro to skills system
+- **writing-skills** -- TDD framework for creating new skills
+- **using-superpowers** -- meta-skill, auto-invocation rules
+- **shared** -- shared utilities for other skills
+
+## Key Differences from obra/superpowers
+
+- `.tasks.json` persistence -- plans survive session restarts
+- Pre-commit hook -- blocks commit if tasks incomplete
+- Task metadata: `verifyCommand`, `acceptanceCriteria` per task
+- PlanMode explicitly banned (EnterPlanMode/ExitPlanMode)
+- Multi-IDE: Claude Code + Codex + Cursor + OpenCode
+- Built-in code-reviewer subagent in agents/
 
 ## Integration
 
@@ -50,6 +61,6 @@ proven development workflows that activate automatically.
 
 ## Reference
 
-- Repo: https://github.com/obra/superpowers
-- Author: Jesse Vincent
+- Repo: https://github.com/pcvelz/superpowers
+- Upstream: https://github.com/obra/superpowers
 - License: MIT
