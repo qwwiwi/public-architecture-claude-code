@@ -392,6 +392,99 @@ if [[ "$SETUP_GATEWAY_LOWER" != "n" ]]; then
 fi
 
 # ============================================================
+# Step 7.6: OpenViking (semantic memory)
+# ============================================================
+
+ask "Set up OpenViking semantic memory? [Y/n]"
+read -r SETUP_OV
+
+SETUP_OV_LOWER=$(echo "$SETUP_OV" | tr '[:upper:]' '[:lower:]')
+if [[ "$SETUP_OV_LOWER" != "n" ]]; then
+    log "Setting up OpenViking..."
+
+    # Install openviking Python package
+    if command -v pip3 &>/dev/null; then
+        pip3 install openviking --upgrade --quiet 2>/dev/null \
+            || warn "Failed to install openviking via pip3. Install manually: pip3 install openviking"
+    elif [ -d "${SHARED}/gateway/.venv" ]; then
+        "${SHARED}/gateway/.venv/bin/pip" install openviking --upgrade --quiet 2>/dev/null \
+            || warn "Failed to install openviking in gateway venv."
+    else
+        warn "pip3 not found. Install manually: pip3 install openviking"
+    fi
+
+    # Create config directory
+    OV_DIR="${HOME}/.openviking"
+    OV_CONF="${OV_DIR}/ov.conf"
+
+    if [ ! -d "$OV_DIR" ]; then
+        mkdir -p "$OV_DIR"
+    fi
+
+    # Check if already configured
+    if [ -f "$OV_CONF" ]; then
+        existing_key=$(jq -r '.server.root_api_key // "CHANGE_ME"' "$OV_CONF" 2>/dev/null || echo "CHANGE_ME")
+        if [[ "$existing_key" != "CHANGE_ME" && -n "$existing_key" ]]; then
+            log "OpenViking already configured -- skipping."
+        fi
+    else
+        ask "OpenViking API key (press Enter to skip)"
+        read -r OV_KEY
+
+        if [[ -z "$OV_KEY" ]]; then
+            OV_KEY="CHANGE_ME"
+            warn "OpenViking skipped -- configure later in: ${OV_CONF}"
+        fi
+
+        # Write config via jq (safe from shell expansion)
+        jq -n --arg key "$OV_KEY" '{
+          server: { host: "127.0.0.1", port: 1933, root_api_key: $key },
+          account: "default",
+          user: "agent"
+        }' > "$OV_CONF"
+        chmod 600 "$OV_CONF"
+
+        if [[ "$OV_KEY" != "CHANGE_ME" ]]; then
+            log "OpenViking config written with API key."
+        else
+            log "OpenViking config template written to ${OV_CONF}"
+        fi
+    fi
+
+    # Create systemd service (Linux only, if binary exists)
+    OV_BIN=$(command -v openviking 2>/dev/null || echo "")
+    OV_SERVICE="/etc/systemd/system/openviking.service"
+    if [[ -n "$OV_BIN" && ! -f "$OV_SERVICE" && "$(uname)" == "Linux" ]]; then
+        if [ -w "/etc/systemd/system/" ]; then
+            cat > "$OV_SERVICE" << OVSEOF
+[Unit]
+Description=OpenViking Semantic Memory Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=$(whoami)
+ExecStart=${OV_BIN} serve --config ${OV_CONF}
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openviking
+Environment=HOME=${HOME}
+
+[Install]
+WantedBy=multi-user.target
+OVSEOF
+            systemctl daemon-reload 2>/dev/null || true
+            log "openviking.service installed. Start: sudo systemctl start openviking"
+        else
+            warn "No write access to /etc/systemd/system/. Create service manually."
+        fi
+    fi
+fi
+
+# ============================================================
 # Step 8: Create symlinks
 # ============================================================
 
