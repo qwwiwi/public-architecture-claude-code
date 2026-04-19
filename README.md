@@ -51,7 +51,6 @@ This is the **only** env variable you need to change. No MAX_THINKING_TOKENS, no
 ├── skills/                # Skills -- reusable capabilities
 │   ├── present/SKILL.md   # HTML visualization
 │   └── .../SKILL.md       # Other skills
-├── kanban/                # vibe-kanban task board (shared SQLite)
 ├── hooks/                 # Shell scripts for automation
 │   ├── block-dangerous.sh # Blocks rm -rf, force push, DROP TABLE
 │   ├── protect-files.sh   # Protects .env, .pem, .key, secrets/*
@@ -380,14 +379,6 @@ Each agent writes to its own namespace but searches across all. Cross-agent sear
 | **[architecture-brain-tests](https://github.com/qwwiwi/architecture-brain-tests)** | 800 tests verifying everything above |
 
 Test categories: T20 (security), T26 (models), T27 (COMPACT_WINDOW), T28 (Learnings v2), and 25+ more.
-
-## Task Board
-
-```
-npx vibe-kanban              # opens browser kanban UI
-```
-
-All agents share one board via MCP. Operator sees tasks in browser, agents manage via `list_workspaces` / `create_session` tools. Data: local SQLite in `shared/kanban/`, no cloud.
 
 ## Two Ways to Connect Telegram
 

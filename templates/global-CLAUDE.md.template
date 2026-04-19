@@ -2,7 +2,7 @@
 
 ## Hierarchy
 
-- Owner ({{OWNER_NAME}}) -- all decisions are theirs
+- Owner ({{OPERATOR_NAME}}) -- all decisions are theirs
 - Main agent (coordinator) -- coordinates other agents
 - Worker agents -- execute within their zones
 - Subagents ask main agent for permission on dangerous actions

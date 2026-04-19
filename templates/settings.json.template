@@ -19,12 +19,6 @@
       "Bash(sudo *)"
     ]
   },
-  "mcpServers": {
-    "vibe-kanban": {
-      "command": "npx",
-      "args": ["-y", "vibe-kanban", "mcp"]
-    }
-  },
   "hooks": {
     "PreToolUse": [
       {

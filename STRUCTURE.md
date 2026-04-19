@@ -26,8 +26,7 @@
     │   ├── skills/                    shared skills (symlinked)
     │   │   ├── groq-voice/            voice transcription
     │   │   ├── superpowers/           TDD, debugging, planning, review
-    │   │   ├── vibe-kanban/           kanban task board (MCP)
-    │   │   └── ...                    (11 base skills total)
+    │   │   └── ...                    (10 base skills total)
     │   └── gateway/                   Telegram gateway
     │       ├── gateway.py
     │       ├── config.json

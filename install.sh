@@ -67,6 +67,11 @@ read -r AGENT_NAME
 AGENT_NAME="${AGENT_NAME:-MyAgent}"
 AGENT_ID=$(echo "$AGENT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
+if [[ ! "${AGENT_ID}" =~ ^[a-z0-9][a-z0-9-]{0,30}$ ]]; then
+    err "Agent name must contain only letters, numbers, and hyphens (max 31 chars)"
+    exit 1
+fi
+
 # Agent role
 ask "Agent role (e.g. Coder, Coordinator, Research assistant)"
 read -r AGENT_ROLE
@@ -155,7 +160,8 @@ echo "  Path:     ${LAB_DIR}/${AGENT_ID}/.claude/"
 echo ""
 ask "Proceed? [Y/n]"
 read -r CONFIRM
-if [[ "${CONFIRM,,}" == "n" ]]; then
+CONFIRM_LOWER=$(echo "$CONFIRM" | tr '[:upper:]' '[:lower:]')
+if [[ "$CONFIRM_LOWER" == "n" ]]; then
     echo "Cancelled."
     exit 0
 fi
@@ -181,6 +187,9 @@ mkdir -p "${SHARED}/gateway/state"
 mkdir -p "${SHARED}/gateway/media-inbound"
 mkdir -p "${SHARED}/scripts"
 mkdir -p "${GLOBAL_DIR}/rules"
+
+# Create handoff.md (hot context for session continuity)
+echo "# Hot context -- last 10 entries" > "${WORKSPACE}/core/hot/handoff.md"
 
 # ============================================================
 # Step 5: Fill templates
@@ -255,7 +264,8 @@ LEARNINGS_DIR="${HOME}/projects/learnings"
 ask "Set up Learnings repo? (git-based self-improvement) [Y/n]"
 read -r SETUP_LEARNINGS
 
-if [[ "${SETUP_LEARNINGS,,}" != "n" ]]; then
+SETUP_LEARNINGS_LOWER=$(echo "$SETUP_LEARNINGS" | tr '[:upper:]' '[:lower:]')
+if [[ "$SETUP_LEARNINGS_LOWER" != "n" ]]; then
     if [ ! -d "${LEARNINGS_DIR}" ]; then
         ask "Learnings repo URL (e.g. github.com/you/learnings, or skip)"
         read -r LEARNINGS_REPO_URL
@@ -322,7 +332,7 @@ for script in trim-hot.sh compress-warm.sh rotate-warm.sh ov-session-sync.sh mem
 done
 
 # ============================================================
-# Step 7: Install shared skills (11 base skills)
+# Step 7: Install shared skills (10 base skills)
 # ============================================================
 
 SKILLS_SRC="${SCRIPT_DIR}/skills"
@@ -357,7 +367,8 @@ GATEWAY_DIR="${SHARED}/gateway"
 ask "Set up Telegram gateway? [Y/n]"
 read -r SETUP_GATEWAY
 
-if [[ "${SETUP_GATEWAY,,}" != "n" ]]; then
+SETUP_GATEWAY_LOWER=$(echo "$SETUP_GATEWAY" | tr '[:upper:]' '[:lower:]')
+if [[ "$SETUP_GATEWAY_LOWER" != "n" ]]; then
     if [ ! -f "${GATEWAY_DIR}/gateway.py" ]; then
         log "Downloading gateway from jarvis-telegram-gateway..."
         GATEWAY_REPO="/tmp/jarvis-gateway-install-$$"

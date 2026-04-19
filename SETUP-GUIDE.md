@@ -5,10 +5,9 @@
 ## Что получишь
 
 - Claude Code агент с настроенной архитектурой памяти (4 слоя)
-- 11 базовых скиллов (голос, канбан, git, YouTube, Twitter и др.)
+- 10 базовых скиллов (голос, git, YouTube, Twitter и др.)
 - Superpowers: TDD, дебаг, планирование, code review
 - (Опционально) Telegram-бот для работы с агентом
-- (Опционально) Vibe Kanban -- визуальная доска задач
 
 ## Требования
 
@@ -109,10 +108,9 @@ bash install.sh
 ~/.claude-lab/
 ├── shared/
 │   ├── secrets/                 одна папка для всех секретов (chmod 700)
-│   └── skills/                  11 базовых скиллов (symlink в каждый агент)
+│   └── skills/                  10 базовых скиллов (symlink в каждый агент)
 │       ├── groq-voice/          транскрибация голосовых (Groq Whisper)
 │       ├── superpowers/         TDD, дебаг, ревью
-│       ├── vibe-kanban/         канбан-доска задач
 │       ├── datawrapper/          графики и таблицы (Datawrapper API)
 │       ├── gws/                 Google Workspace
 │       ├── youtube-transcript/  транскрибация YouTube
@@ -150,7 +148,7 @@ pip install pytest
 python3 -m pytest tests/ -v
 ```
 
-Должно пройти 460 тестов. Они проверяют: все скиллы на месте, шаблоны корректные, секреты не утекли, vibe-kanban прописан везде.
+Должно пройти 460 тестов. Они проверяют: все скиллы на месте, шаблоны корректные, секреты не утекли.
 
 ---
 
@@ -219,16 +217,6 @@ cd ~/.claude-lab/homer/.claude
 
 ---
 
-## Шаг 9: Запусти Vibe Kanban (канбан-доска)
-
-```bash
-# Запусти доску (откроется в браузере)
-npx vibe-kanban
-
-# Агенты подключаются автоматически через MCP (уже настроен в settings.json)
-```
-
-Ты видишь задачи в браузере (drag & drop). Агенты видят задачи через MCP tools (`list_workspaces`, `create_session`). Данные локальные (SQLite), без облака.
 
 ---
 
@@ -282,8 +270,7 @@ https://github.com/qwwiwi/jarvis-telegram-gateway
 2. Расскажи кто я (из USER.md)
 3. Покажи свои навыки: какие скиллы тебе доступны (ls skills/)
 4. Покажи какие команды Superpowers ты знаешь
-5. Проверь что vibe-kanban доступен через MCP
-6. Запиши в core/hot/recent.md свою первую запись:
+5. Запиши в core/hot/recent.md свою первую запись:
    ### [текущая дата] [own_text]
    **Оператор:** Первый запуск агента
    **Агент:** [краткое описание себя и готовности]
@@ -302,14 +289,13 @@ https://github.com/qwwiwi/jarvis-telegram-gateway
 
 1. tree ~/.claude-lab/ -L 4 -- структура на месте?
 2. cat ~/.claude-lab/homer/.claude/CLAUDE.md -- @include на месте?
-3. ls ~/.claude-lab/shared/skills/ -- 11 скиллов?
+3. ls ~/.claude-lab/shared/skills/ -- 10 скиллов?
 4. cat ~/.claude/CLAUDE.md -- глобальные правила?
 5. cat ~/.claude/rules/*.md -- языковые конвенции?
 6. crontab -l | grep -E "trim|rotate|compress|ov-session" -- 5 cron-задач?
 7. claude plugins list -- Superpowers установлен?
 8. gh auth status -- GitHub авторизован?
-9. npx vibe-kanban --help -- Vibe Kanban доступен?
-10. (Если Telegram) отправь тестовое сообщение боту
+9. (Если Telegram) отправь тестовое сообщение боту
 
 Для каждого пункта покажи результат. Если что-то не настроено -- исправь.
 ```
@@ -345,4 +331,4 @@ A: Нет. Без него работают 3 из 4 слоёв памяти. [O
 A: Нет. Claude Code работает из терминала. Telegram -- удобство (голосовые, мобильный доступ).
 
 **Q: Сколько стоит?**
-A: Anthropic Max $100-200/мес. Всё остальное (архитектура, скиллы, канбан, gateway) -- бесплатное open-source.
+A: Anthropic Max $100-200/мес. Всё остальное (архитектура, скиллы, gateway) -- бесплатное open-source.

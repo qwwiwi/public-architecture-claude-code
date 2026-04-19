@@ -114,24 +114,6 @@ External semantic database. NOT a file. Accessed via HTTP API.
 
 ---
 
-## Layer 6b: Task Board -- Vibe Kanban (`shared/kanban/`)
-
-Local kanban board shared by all agents. NOT loaded into context. Accessed via MCP tools.
-
-| Resource | Role | Loads | Writer | Access |
-|----------|------|-------|--------|--------|
-| **shared/kanban/.vibe-kanban/** | SQLite database with tasks, statuses, worktree mappings | never (MCP access) | agents (via MCP), operator (via browser UI) | all agents RW via MCP, operator RW via browser |
-
-**MCP tools available to every agent:**
-- `list_workspaces` -- see all tasks and statuses
-- `create_session` -- start working on a task (creates git worktree)
-- `run_session_prompt` -- execute work in task's worktree
-- `get_execution` -- check execution status
-
-**Who can touch:** Operator (browser drag-and-drop), agents (MCP tools). Data is local SQLite, no cloud.
-
----
-
 ## Layer 7: Skills (`skills/`)
 
 Callable skills. NOT loaded at session start. Loaded on-demand when Skill tool invoked.
@@ -142,7 +124,7 @@ Callable skills. NOT loaded at session start. Loaded on-demand when Skill tool i
 | **skills/{name}/*.sh** | Shell scripts used by skill | on-demand (skill execution) | developer (manual) | agent executes |
 | **skills/{name}/*.py** | Python scripts used by skill | on-demand (skill execution) | developer (manual) | agent executes |
 
-**Example skills:** groq-voice, superpowers, gws, youtube-transcript, twitter, quick-reminders, markdown-new, excalidraw, datawrapper, perplexity-research, vibe-kanban
+**Example skills:** groq-voice, superpowers, gws, youtube-transcript, twitter, quick-reminders, markdown-new, excalidraw, datawrapper, perplexity-research
 
 **Who can touch:** Developer/operator creates skills. Agent can use but not modify.
 
@@ -252,7 +234,6 @@ Telegram router. Shared across agents. NOT loaded into agent context.
 | hot/recent.md | RW | R | W (append) | RW | **NO** |
 | MEMORY.md | RW | R+append | - | W | **NO** |
 | LEARNINGS.md | RW | RW | - | - | **NO** |
-| Vibe Kanban | RW (browser) | RW (MCP) | - | - | **shared** (all agents) |
 | Skills | RW | R+execute | - | - | shared |
 | Secrets | RW | **NEVER** | R | R | **NEVER** |
 | gateway.py | RW | R | execute | - | - |

@@ -183,13 +183,10 @@ Telegram
 │   │   ├── config.json               # Agent registry (see above)
 │   │   ├── state/                    # Session files per agent
 │   │   └── media-inbound/            # Downloaded media
-│   ├── kanban/                        # VIBE KANBAN (shared task board)
-│   │   └── .vibe-kanban/             # SQLite DB, auto-created by npx
 │   └── skills/                        # Shared skills (symlinked)
 │       ├── groq-voice/               # Voice transcription
 │       ├── superpowers/              # TDD, debugging, planning, review
-│       ├── vibe-kanban/              # Kanban task board (MCP)
-│       └── ...                       # (11 base skills total)
+│       └── ...                       # (10 base skills total)
 ```
 
 ## Gateway Features
@@ -321,28 +318,22 @@ Messages in topic 42 go to Jarvis, topic 43 to Homer. Messages outside configure
 
 ## Key Design Decisions
 
-### 1. Vibe Kanban -- local task board for all agents
-
-All agents share one vibe-kanban instance. Operator sees the board in browser, agents interact via MCP.
-
-Why: visual task tracking, git worktree isolation per task, no cloud dependency, no paid services. Operator creates tasks, agents execute and update statuses in real-time.
-
-### 2. Secrets -- ONE folder for all
+### 1. Secrets -- ONE folder for all
 
 All secrets live in `shared/secrets/`. No duplication per agent.
 
 Why: fewer places to manage, rotate, and audit. Agents access via symlinks or env vars.
 
-### 3. Shared skills vs specialized
+### 2. Shared skills vs specialized
 
 | Type | Path | Example | Who uses |
 |------|------|---------|----------|
-| **Shared** | `shared/skills/` | groq-voice, superpowers, vibe-kanban | All agents (symlinked) |
+| **Shared** | `shared/skills/` | groq-voice, superpowers, perplexity-research | All agents (symlinked) |
 | **Specialized** | `{agent}/.claude/skills/` | custom agent-specific skills | Only that agent |
 
 Shared skills are symlinked into each agent's `skills/` at install time. Specialized skills live only in the agent's workspace.
 
-### 4. One gateway, multiple bots
+### 3. One gateway, multiple bots
 
 One `gateway.py` process manages all bots. Per-bot threads poll Telegram independently. Routing is by `bot_token` match to `config.json` agent entry.
 
@@ -395,74 +386,13 @@ curl -X POST "http://localhost:1933/api/v1/search/find" \
 
 > Replace `my-team` with your account name. Replace `jarvis` with the searching agent's name.
 
-## Task Management -- Vibe Kanban
-
-All agents share one local kanban board powered by [vibe-kanban](https://github.com/BloopAI/vibe-kanban). No cloud, no external servers -- SQLite on your disk.
-
-### How it works
-
-```
-OPERATOR (browser)           AGENTS (MCP)
-      │                           │
-      │  drag & drop tasks        │  list_workspaces / create_session
-      │                           │  run_session_prompt / get_execution
-      ▼                           ▼
-┌─────────────────────────────────────────┐
-│           VIBE KANBAN (localhost)       │
-│                                         │
-│  ┌──────┐  ┌──────────┐  ┌──────────┐  │
-│  │ Todo │→ │InProgress│→ │ InReview │→ Done │
-│  └──────┘  └──────────┘  └──────────┘  │
-│                                         │
-│  Storage: SQLite (.vibe-kanban/db)     │
-│  Isolation: git worktree per task      │
-└─────────────────────────────────────────┘
-```
-
-### Agent roles on the board
-
-| Agent | What they do on kanban |
-|-------|----------------------|
-| **Coordinator** | Creates tasks, sets priorities, reviews InReview |
-| **Coder** | Picks Todo, moves to InProgress, submits to InReview |
-| **Inbox/Knowledge** | Creates research tasks from processed content |
-
-### MCP integration
-
-Every agent gets vibe-kanban via MCP (configured in `settings.json`):
-
-```json
-{
-  "mcpServers": {
-    "vibe-kanban": {
-      "command": "npx",
-      "args": ["-y", "vibe-kanban", "mcp"]
-    }
-  }
-}
-```
-
-Agent receives 4 tools: `list_workspaces`, `create_session`, `run_session_prompt`, `get_execution`.
-
-### Task lifecycle
-
-```
-Todo  -->  InProgress  -->  InReview  -->  Done
-                |
-                v
-           Cancelled
-```
-
-Each task = separate git worktree + branch. Completed worktrees auto-cleanup after 24h.
-
 ## Inter-Agent Communication
 
-4 channels:
+3 channels:
 
 | Channel | Use case | Example |
 |---------|----------|---------|
 | **Telegram** | Operator talks to agent directly | Send @homer_bot a code task |
-| **Vibe Kanban** | Task management, status tracking | Operator creates task, agent picks it up |
 | **Message bus** | Agent-to-agent delegation | Jarvis sends task to Homer |
 | **OpenViking** | Shared knowledge lookup | Homer searches what Edith stored |
 
@@ -535,7 +465,7 @@ bash install.sh
 # - Asks agent name, role, model, your name
 # - Creates ~/.claude-lab/{agent}/.claude/ with all dirs
 # - Fills templates, replaces {{AGENT_NAME}} etc.
-# - Installs 11 base skills (symlinked)
+# - Installs 10 base skills (symlinked)
 # - Sets up cron scripts for memory management
 ```
 

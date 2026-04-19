@@ -18,7 +18,7 @@
 | COLD | core/MEMORY.md | on-demand Read |
 | L4 | OpenViking semantic search | curl on-demand |
 
-## 11 Base Skills
+## 10 Base Skills
 
 | # | Skill | What it does | API key needed |
 |---|-------|-------------|----------------|
@@ -32,7 +32,6 @@
 | 8 | **excalidraw** | Diagrams and schemas | none |
 | 9 | **datawrapper** | Charts and tables | datawrapper.de (free) |
 | 10 | **perplexity-research** | Web research via Perplexity API | perplexity.ai (paid) |
-| 11 | **vibe-kanban** | Kanban task board (MCP, SQLite) | none |
 
 ## Secrets
 
@@ -57,14 +56,6 @@
 | openviking | 1933 | Semantic memory |
 | gateway | -- | Telegram gateway |
 | {{SERVICE_1_NAME}} | {{SERVICE_1_PORT}} | {{SERVICE_1_DESC}} |
-
-## Kanban (vibe-kanban)
-
-- Launch: `npx vibe-kanban` (opens browser UI)
-- MCP: configured in settings.json (auto-available to agent)
-- Storage: SQLite (local, no cloud)
-- Tasks: each task gets its own git worktree + branch
-- Statuses: Todo -> InProgress -> InReview -> Done / Cancelled
 
 ## GitHub
 

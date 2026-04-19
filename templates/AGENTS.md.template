@@ -19,18 +19,6 @@
 | Send message | `{{MSG_SEND_CMD}}` |
 | Update status | `{{STATUS_UPDATE_CMD}}` |
 
-## Task Board (Vibe Kanban)
-
-Shared kanban board for all agents. Access via MCP tools:
-- `list_workspaces` -- see all tasks and statuses
-- `create_session` -- start working on a task (creates git worktree)
-- `run_session_prompt` -- execute work in task's worktree
-- `get_execution` -- check execution status
-
-Operator sees the board in browser (`npx vibe-kanban`). Data: local SQLite, no cloud.
-
-**Statuses:** Todo -> InProgress -> InReview -> Done / Cancelled
-
 ## Task Acceptance
 
 1. Task unclear? -> ask clarifying questions
