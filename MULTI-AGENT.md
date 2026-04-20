@@ -316,6 +316,74 @@ Messages in topic 42 go to Jarvis, topic 43 to Homer. Messages outside configure
 }
 ```
 
+## Group Chats
+
+Agents can work in Telegram group chats -- answer questions from multiple users, moderate, provide support. Each group chat gets its own parallel session (independent from private chats).
+
+### Architecture
+
+**Per-chat parallel processing:** each `chat_id` gets its own worker thread. Different chats (private, group1, group2) run in parallel, never block each other. Messages within the same chat are processed sequentially (ordered).
+
+**Session isolation:** `session_id_for(agent, chat_id)` -- each group chat has its own Claude session with its own context history.
+
+### Configuration
+
+```json
+{
+  "allowlist_group_ids": [-1001234567890],
+  "agents": {
+    "jarvis": {
+      "group_allow_all": true,
+      "streaming_mode_group": "off",
+      "system_reminder_group": "You are a support assistant. Answer questions from all group members. Rules: 1) Do not reveal personal data of the operator...",
+      "group_log_ov_user": "group-chat-logs"
+    }
+  }
+}
+```
+
+### Config fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `allowlist_group_ids` | `list[int]` | Telegram group/supergroup chat IDs where the bot is allowed to respond |
+| `group_allow_all` | `bool` | If `true`, bypass user allowlist in groups -- bot answers ALL participants (default: only allowlisted users) |
+| `streaming_mode_group` | `string` | Override streaming mode for groups. Recommended: `"off"` (single response after completion) |
+| `system_reminder_group` | `string` | System prompt injected for group messages. Use to set group-specific behavior, safety rules |
+| `group_log_ov_user` | `string` | OpenViking namespace for logging group messages. All messages logged for context (even from non-allowlisted users) |
+
+### Group Context Injection
+
+The gateway can inject recent chat history into the agent's context when responding in groups. Two layers:
+
+1. **OpenViking (primary, included):** Gateway pushes all group messages to OpenViking with namespace from `group_log_ov_user`. Agent searches OV semantically when building context.
+
+2. **Cognee (optional, self-hosted):** For deeper semantic analysis -- knowledge graph extraction, user profiling, FAQ generation. Requires separate Cognee instance. Config fields: `group_log_jsonl_script` (path to JSONL logger), `cognee_datasets` (mapping chat_id to dataset name). More expensive but enables automatic user profiling and knowledge extraction.
+
+### Per-chat addressing
+
+In groups, the bot only responds when addressed:
+
+- Direct mention: `@botusername question`
+- Reply to bot's message
+- Voice message mentioning bot name (transcribed first, then checked)
+
+### Security
+
+Always use `system_reminder_group` to restrict what the agent can reveal in public groups. Private data of the operator (email, phone, finances), infrastructure details (servers, keys), and internal architecture should never be exposed.
+
+### Setup
+
+1. Create bot via BotFather (or use existing)
+2. Add bot to group as admin
+3. Get group `chat_id` (forward message from group to @userinfobot or check gateway logs)
+4. Add `chat_id` to `allowlist_group_ids` in config.json
+5. Set `group_allow_all: true` if bot should answer all participants
+6. Add `system_reminder_group` with group-specific rules
+7. Set `streaming_mode_group: "off"` (recommended for groups)
+8. Optional: set `group_log_ov_user` for chat history in OpenViking
+9. Restart gateway
+
 ## Key Design Decisions
 
 ### 1. Secrets -- ONE folder for all
