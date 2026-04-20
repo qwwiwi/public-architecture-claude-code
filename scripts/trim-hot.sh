@@ -2,22 +2,31 @@
 set -euo pipefail
 
 # trim-hot.sh -- Compress HOT memory via Sonnet
-# Entries >24h: Sonnet extracts key facts -> WARM
-# If >MAX_ENTRIES: oldest also compressed
-# Fallback: bash extraction (first 120 chars) if Sonnet unavailable
-# IMPORTANT: runs claude from /tmp to avoid loading project CLAUDE.md
+# Strategy:
+#   1. Entries >24h: collect full text
+#   2. Send to Sonnet for smart summary extraction
+#   3. Summaries -> WARM (decisions.md)
+#   4. Old entries -> archive/hot-YYYY-MM-DD.md
+#   5. If still >40 entries: compress oldest via Sonnet too
+# Fallback: if Sonnet unavailable, use bash extraction (first 120 chars)
+# IMPORTANT: runs claude from /tmp to avoid loading project CLAUDE.md context
 
-WS="${AGENT_WORKSPACE:-.claude}"
+WS="/home/openclaw/.claude-lab/thrall/.claude"
 HOT="$WS/core/hot/recent.md"
 WARM="$WS/core/warm/decisions.md"
+ARCHIVE_DIR="$WS/core/hot/archive"
 LOCKFILE="/tmp/trim-hot.lock"
-LOG="/tmp/trim-hot.log"
+LOGDIR="/home/openclaw/.claude-lab/thrall/logs"
+LOG="$LOGDIR/trim-hot.log"
 MAX_AGE_HOURS=24
 MAX_ENTRIES=40
 SONNET_BUDGET="0.15"
 
-log() { echo "$(date -u +%H:%M:%S) $1" >> "$LOG"; }
-echo "=== trim-hot.sh $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" >> "$LOG"
+mkdir -p "$ARCHIVE_DIR" "$LOGDIR"
+
+log() { echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $1" >> "$LOG"; }
+
+log "=== trim-hot.sh START ==="
 
 [ ! -f "$HOT" ] && log "No recent.md, skip" && exit 0
 
@@ -35,9 +44,9 @@ flock -n 200 || { log "Lock held, skip"; exit 0; }
 CUTOFF=$(date -u -d "${MAX_AGE_HOURS} hours ago" +%s)
 TODAY=$(date -u +%Y-%m-%d)
 
-# Phase 1: Parse all blocks
+# --- Phase 1: Parse all blocks ---
 BLOCKS_DIR=$(mktemp -d)
-trap 'rm -rf "$BLOCKS_DIR"' EXIT
+cleanup_blocks() { rm -rf "$BLOCKS_DIR"; }; trap cleanup_blocks EXIT
 
 BLOCK_IDX=0
 CURRENT_FILE=""
@@ -45,7 +54,7 @@ CURRENT_FILE=""
 while IFS= read -r line || [ -n "$line" ]; do
     if [[ "$line" =~ ^###[[:space:]]([0-9]{4}-[0-9]{2}-[0-9]{2})[[:space:]]([0-9]{2}:[0-9]{2}) ]]; then
         BLOCK_IDX=$((BLOCK_IDX + 1))
-        CURRENT_FILE="$BLOCKS_DIR/$(printf '%04d' $BLOCK_IDX)"
+        CURRENT_FILE="$BLOCKS_DIR/$(printf %04d $BLOCK_IDX)"
         echo "TS=${BASH_REMATCH[1]} ${BASH_REMATCH[2]}" > "${CURRENT_FILE}.meta"
         echo "$line" > "$CURRENT_FILE"
     elif [ -n "$CURRENT_FILE" ]; then
@@ -56,19 +65,22 @@ done < "$HOT"
 TOTAL_BLOCKS=$BLOCK_IDX
 log "Total blocks: ${TOTAL_BLOCKS}"
 
-# Phase 2: Separate old vs recent
+# --- Phase 2: Separate old vs recent blocks ---
 OLD_TEXT=$(mktemp)
 OLD_COUNT=0
 KEPT_COUNT=0
 
 for i in $(seq 1 "$TOTAL_BLOCKS"); do
-    FILE="$BLOCKS_DIR/$(printf '%04d' $i)"
+    FILE="$BLOCKS_DIR/$(printf %04d $i)"
     META="${FILE}.meta"
     [ ! -f "$META" ] && continue
-    TS=$(grep '^TS=' "$META" | sed 's/^TS=//')
+
+    TS=$(grep "^TS=" "$META" | sed "s/^TS=//")
     EPOCH=$(date -u -d "$TS" +%s 2>/dev/null || echo 0)
+
     if [ "$EPOCH" -lt "$CUTOFF" ]; then
-        cat "$FILE" >> "$OLD_TEXT"; echo "" >> "$OLD_TEXT"
+        cat "$FILE" >> "$OLD_TEXT"
+        echo "" >> "$OLD_TEXT"
         rm -f "$FILE" "$META"
         OLD_COUNT=$((OLD_COUNT + 1))
     else
@@ -78,7 +90,7 @@ done
 
 log "Phase 1 (time): old=${OLD_COUNT}, kept=${KEPT_COUNT}"
 
-# Phase 3: Size-based trim
+# --- Phase 3: Size-based trim for remaining ---
 REMAINING=$(ls "$BLOCKS_DIR"/*.meta 2>/dev/null | wc -l)
 EXTRA_COUNT=0
 
@@ -86,7 +98,8 @@ if [ "$REMAINING" -gt "$MAX_ENTRIES" ]; then
     TO_REMOVE=$((REMAINING - MAX_ENTRIES))
     for META in $(ls "$BLOCKS_DIR"/*.meta | head -n "$TO_REMOVE"); do
         FILE="${META%.meta}"
-        cat "$FILE" >> "$OLD_TEXT"; echo "" >> "$OLD_TEXT"
+        cat "$FILE" >> "$OLD_TEXT"
+        echo "" >> "$OLD_TEXT"
         rm -f "$FILE" "$META"
         EXTRA_COUNT=$((EXTRA_COUNT + 1))
     done
@@ -95,7 +108,17 @@ fi
 
 TOTAL_TO_COMPRESS=$((OLD_COUNT + EXTRA_COUNT))
 
-# Phase 4: Sonnet compression
+# --- Phase 3.5: Archive old entries raw ---
+if [ -s "$OLD_TEXT" ]; then
+    ARCHIVE_FILE="$ARCHIVE_DIR/hot-${TODAY}.md"
+    if [ -f "$ARCHIVE_FILE" ]; then
+        echo "" >> "$ARCHIVE_FILE"
+    fi
+    cat "$OLD_TEXT" >> "$ARCHIVE_FILE"
+    log "Archived ${TOTAL_TO_COMPRESS} blocks to ${ARCHIVE_FILE}"
+fi
+
+# --- Phase 4: Sonnet compression ---
 SUMMARIES=$(mktemp)
 
 if [ "$TOTAL_TO_COMPRESS" -gt 0 ] && [ -s "$OLD_TEXT" ]; then
@@ -105,28 +128,31 @@ if [ "$TOTAL_TO_COMPRESS" -gt 0 ] && [ -s "$OLD_TEXT" ]; then
 - One line per entry, format: - YYYY-MM-DD HH:MM: fact/decision/result
 - Max 120 chars per line
 - Extract: what was done, result, decision made
-- Skip: greetings, confirmations without facts, errors
-- ONLY output lines starting with '- '. Nothing else.
+- Skip: greetings, confirmations without facts, gateway errors
+- Language: Russian
+- No emoji
+- ONLY output lines starting with - . Nothing else.
 
 Dialog:
 $(cat "$OLD_TEXT")"
 
     SONNET_RESULT=$(cd /tmp && echo "$SONNET_PROMPT" | claude --model sonnet --print \
         --no-session-persistence \
-        --system-prompt "You compress AI agent memory. Output ONLY lines starting with '- YYYY-MM-DD HH:MM: '. Nothing else." \
+        --system-prompt "You compress AI agent memory. Output ONLY summary lines starting with - YYYY-MM-DD HH:MM: . Nothing else." \
         --max-budget-usd "$SONNET_BUDGET" 2>/dev/null) || SONNET_RESULT=""
 
     if [ -n "$SONNET_RESULT" ]; then
-        echo "$SONNET_RESULT" | grep '^- ' > "$SUMMARIES" || true
-        log "Sonnet OK: $(wc -l < "$SUMMARIES") summaries"
+        echo "$SONNET_RESULT" | grep "^- " > "$SUMMARIES" || true
+        SUMMARY_COUNT=$(wc -l < "$SUMMARIES")
+        log "Sonnet OK: ${SUMMARY_COUNT} summaries extracted"
     else
         log "Sonnet unavailable, fallback to bash"
         BLOCK_TS=""
         while IFS= read -r line || [ -n "$line" ]; do
             if [[ "$line" =~ ^###[[:space:]]([0-9]{4}-[0-9]{2}-[0-9]{2})[[:space:]]([0-9]{2}:[0-9]{2}) ]]; then
                 BLOCK_TS="${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"
-            elif [[ "$line" =~ ^\*\*.*:\*\* ]] && [[ ! "$line" =~ ^\*\*Operator:\*\* ]]; then
-                SUMMARY=$(echo "$line" | sed 's/^\*\*[^*]*\*\* //' | head -c 120 | sed 's/[[:space:]]*$//')
+            elif [[ "$line" =~ ^\*\*Thrall:\*\* ]]; then
+                SUMMARY=$(echo "$line" | sed "s/^\*\*Thrall:\*\* //" | head -c 120 | sed "s/[[:space:]]*$//")
                 [ -n "$SUMMARY" ] && echo "- ${BLOCK_TS}: ${SUMMARY}" >> "$SUMMARIES"
             fi
         done < "$OLD_TEXT"
@@ -135,27 +161,42 @@ $(cat "$OLD_TEXT")"
 fi
 rm -f "$OLD_TEXT"
 
-# Phase 5: Write summaries to WARM
+# --- Phase 5: Write summaries to WARM ---
 if [ -s "$SUMMARIES" ]; then
+    SUMMARY_COUNT=$(wc -l < "$SUMMARIES")
     {
         echo ""
         echo "## ${TODAY} (auto-compressed from HOT)"
         echo ""
         cat "$SUMMARIES"
     } >> "$WARM"
-    log "Added $(wc -l < "$SUMMARIES") summaries to WARM"
+    log "Added ${SUMMARY_COUNT} summaries to WARM"
+
+    # --- Phase 5.5: Auto-compress WARM if too large ---
+    WARM_SIZE=$(wc -c < "$WARM")
+    WARM_MAX=5120  # 5KB limit
+    if [ "$WARM_SIZE" -gt "$WARM_MAX" ]; then
+        log "WARM ${WARM_SIZE}b > ${WARM_MAX}b limit, triggering compress-warm.sh"
+        COMPRESS_SCRIPT="$(dirname "$0")/compress-warm.sh"
+        if [ -x "$COMPRESS_SCRIPT" ]; then
+            bash "$COMPRESS_SCRIPT" >> "$LOG" 2>&1 || log "compress-warm.sh failed (non-fatal)"
+        fi
+    fi
 fi
 rm -f "$SUMMARIES"
 
-# Phase 6: Rebuild HOT
+# --- Phase 6: Rebuild HOT ---
 {
-    echo "# Hot memory -- rolling journal"
+    echo "# Hot memory -- last 72h rolling journal"
     echo ""
-    for FILE in $(ls "$BLOCKS_DIR"/[0-9]* 2>/dev/null | grep -v '\.meta$' | sort); do
-        cat "$FILE"; echo ""
+    for FILE in $(ls "$BLOCKS_DIR"/[0-9]* 2>/dev/null | grep -v "\.meta$" | sort); do
+        cat "$FILE"
+        echo ""
     done
 } > "$HOT"
 
 NEW_SIZE=$(wc -c < "$HOT")
+FINAL_BLOCKS=$(ls "$BLOCKS_DIR"/*.meta 2>/dev/null | wc -l)
+log "Final: ${FINAL_BLOCKS} blocks, ${NEW_SIZE} bytes"
 log "HOT: ${SIZE}b -> ${NEW_SIZE}b (saved $((SIZE - NEW_SIZE))b)"
-log "Done."
+log "=== trim-hot.sh DONE ==="
