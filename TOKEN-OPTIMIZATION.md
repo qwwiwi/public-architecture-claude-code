@@ -36,7 +36,7 @@ Do not set MAX_THINKING_TOKENS, SUBAGENT_MODEL, or CLAUDE_AUTOCOMPACT_PCT_OVERRI
 
 | Model | ID | Role | Use for |
 |---|---|---|---|
-| **Opus 4.6** | claude-opus-4-6 | **Primary** | Code writing, review, planning, coordination |
+| **Opus 4.7** | claude-opus-4-7 | **Primary** | Code writing, review, planning, coordination |
 | **Sonnet 4.6** | claude-sonnet-4-6 | **Subagents** | Research, search, exploration, data collection |
 | **Haiku 4.5** | claude-haiku-4-5-20251001 | **Light tasks** | Quick lookups, simple transforms, low-cost operations |
 | **Codex GPT-5.4** | OpenAI | **Optional** | Double review (second opinion alongside Opus) |
@@ -49,7 +49,7 @@ Do not set MAX_THINKING_TOKENS, SUBAGENT_MODEL, or CLAUDE_AUTOCOMPACT_PCT_OVERRI
 | Model | Input | Output | Relative cost |
 |-------|-------|--------|---------------|
 | **Sonnet 4.6** | $3/M | $15/M | **1x** (baseline for subagents) |
-| **Opus 4.6** | $15/M | $75/M | **~5x** (worth it for code quality) |
+| **Opus 4.7** | $15/M | $75/M | **~5x** (worth it for code quality) |
 
 > **On Max subscription ($100-200/mo):** All models included. Cost = rate limit consumption, not $. Sonnet subagents = faster responses + less context consumed.
 
